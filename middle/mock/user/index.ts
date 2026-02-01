@@ -35,6 +35,38 @@ const adminInfo = {
       label: '基础列表删除',
       value: 'basic_list_delete',
     },
+    {
+      label: '商品列表',
+      value: 'commerce_product_list',
+    },
+    {
+      label: '商品维护',
+      value: 'commerce_product_update',
+    },
+    {
+      label: '订单列表',
+      value: 'commerce_order_list',
+    },
+    {
+      label: '订单处理',
+      value: 'commerce_order_update',
+    },
+    {
+      label: '商家列表',
+      value: 'identity_merchant_list',
+    },
+    {
+      label: '商家管理',
+      value: 'identity_merchant_update',
+    },
+    {
+      label: '用户列表',
+      value: 'identity_user_list',
+    },
+    {
+      label: '用户管理',
+      value: 'identity_user_update',
+    },
   ],
 };
 
