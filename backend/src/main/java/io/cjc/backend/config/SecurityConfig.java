@@ -15,6 +15,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.http.HttpMethod;
 
 import java.util.List;
 
@@ -34,6 +35,10 @@ public class SecurityConfig {
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/auth/**").permitAll()
+                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/commerce/products/**", "/commerce/categories/**").permitAll()
+                .requestMatchers("/user/**").authenticated()
+                .requestMatchers("/uploads/**").permitAll()
                 .requestMatchers("/commerce/**").hasAnyRole("ADMIN", "MERCHANT")
                 .requestMatchers("/identity/**").hasRole("ADMIN")
                 .anyRequest().authenticated()

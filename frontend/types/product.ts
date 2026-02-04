@@ -54,6 +54,7 @@ export interface ProductListQuery {
 // 用户信息
 export interface User {
   id: string
+  username?: string
   name: string
   email: string
   phone?: string

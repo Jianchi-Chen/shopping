@@ -147,7 +147,7 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useProductStore } from '../stores/product'
 import type { Product } from '../types/product'
-import { searchProducts, sortProducts } from '../utils/mockData'
+import { searchProducts, sortProducts } from '../utils/productFilters'
 
 // 状态管理
 const productStore = useProductStore()

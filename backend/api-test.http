@@ -1,0 +1,83 @@
+### API测试文件 - 使用 REST Client 扩展
+
+@baseUrl = http://localhost:8080/api
+@token = 
+
+### 1. 登录获取 Token (必须先执行)
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "username": "admin",
+  "password": "admin123"
+}
+
+### 2. 获取当前用户信息 (API-001)
+GET {{baseUrl}}/auth/me
+Authorization: Bearer {{token}}
+
+### 3. 更新当前用户信息 (API-002)
+PUT {{baseUrl}}/auth/me
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "测试用户",
+  "email": "test@example.com",
+  "phone": "13800138000",
+  "avatar": "https://example.com/avatar.jpg"
+}
+
+### 4. 获取商品列表 (用于找商品ID)
+GET {{baseUrl}}/commerce/products?page=1&pageSize=10
+Authorization: Bearer {{token}}
+
+### 5. 获取商品详情 (API-003) - 替换 {id} 为实际商品ID
+GET {{baseUrl}}/commerce/products/1
+Authorization: Bearer {{token}}
+
+### 6. 创建订单 (API-004)
+POST {{baseUrl}}/commerce/orders
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "items": [
+    {
+      "productId": 1,
+      "productName": "测试商品",
+      "quantity": 2,
+      "price": 99.9,
+      "selectedSpecs": "{\"颜色\":\"黑色\",\"尺寸\":\"M\"}",
+      "image": "https://example.com/product.jpg"
+    }
+  ],
+  "totalAmount": 199.8,
+  "remark": "测试订单",
+  "receiverName": "张三",
+  "receiverPhone": "13800138000",
+  "province": "广东省",
+  "city": "深圳市",
+  "district": "南山区",
+  "addressDetail": "科技园XX路XX号"
+}
+
+### 7. 获取我的订单列表 (API-005)
+GET {{baseUrl}}/commerce/orders/my?page=1&pageSize=10
+Authorization: Bearer {{token}}
+
+### 8. 获取类目列表 (API-006)
+GET {{baseUrl}}/commerce/categories
+Authorization: Bearer {{token}}
+
+### 9. 文件上传 (API-008) - 需要手动选择文件
+POST {{baseUrl}}/upload
+Authorization: Bearer {{token}}
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary
+
+------WebKitFormBoundary
+Content-Disposition: form-data; name="file"; filename="test.txt"
+Content-Type: text/plain
+
+测试文件内容
+------WebKitFormBoundary--

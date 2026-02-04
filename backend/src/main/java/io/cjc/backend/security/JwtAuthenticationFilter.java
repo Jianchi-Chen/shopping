@@ -33,11 +33,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             String token = authHeader.substring(7);
             
             if (jwtTokenProvider.validateToken(token)) {
+                String userId = jwtTokenProvider.getUserIdFromToken(token);
                 String username = jwtTokenProvider.getUsernameFromToken(token);
                 String role = jwtTokenProvider.getRoleFromToken(token);
                 String merchantId = jwtTokenProvider.getMerchantIdFromToken(token);
                 
-                UserPrincipal userPrincipal = new UserPrincipal(username, role, merchantId);
+                UserPrincipal userPrincipal = new UserPrincipal(userId, username, role, merchantId);
                 
                 UsernamePasswordAuthenticationToken authentication = 
                         new UsernamePasswordAuthenticationToken(

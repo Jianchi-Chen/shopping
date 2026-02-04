@@ -159,6 +159,7 @@ const selectedStatus = ref('all')
 
 const statusFilters = [
   { value: 'all', label: '全部订单' },
+  { value: 'pending', label: '待支付' },
   { value: 'confirmed', label: '待发货' },
   { value: 'shipped', label: '已发货' },
   { value: 'delivered', label: '已收货' },
@@ -175,12 +176,16 @@ const filteredOrders = computed(() => {
 onMounted(() => {
   // 检查登录状态
   if (!userStore.isLoggedIn) {
-    router.push('/auth/login')
+    userStore.loadCurrentUser().catch(() => {
+      router.push('/auth/login')
+    })
   }
+  userStore.loadOrders()
 })
 
 const getStatusText = (status: string): string => {
   const statusMap: Record<string, string> = {
+    pending: '待支付',
     confirmed: '待发货',
     shipped: '已发货',
     delivered: '已收货',
@@ -191,6 +196,7 @@ const getStatusText = (status: string): string => {
 
 const getStatusColor = (status: string): string => {
   const colorMap: Record<string, string> = {
+    pending: 'border-orange-500',
     confirmed: 'border-blue-500',
     shipped: 'border-purple-500',
     delivered: 'border-green-500',
@@ -201,6 +207,7 @@ const getStatusColor = (status: string): string => {
 
 const getStatusBadge = (status: string): string => {
   const badgeMap: Record<string, string> = {
+    pending: 'bg-orange-100 text-orange-700',
     confirmed: 'bg-blue-100 text-blue-700',
     shipped: 'bg-purple-100 text-purple-700',
     delivered: 'bg-green-100 text-green-700',

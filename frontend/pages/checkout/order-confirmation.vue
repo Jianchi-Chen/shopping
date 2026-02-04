@@ -96,13 +96,13 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { useProductStore } from '../../stores/product'
 import { useUserStore } from '../../stores/user'
-import { generateId } from '../../utils/helpers'
-import type { Order, OrderItem } from '../../types/product'
 
 const productStore = useProductStore()
 const userStore = useUserStore()
+const router = useRouter()
 const showCart = ref(false)
 const currentStep = ref(3)
 const orderId = ref('')
@@ -112,31 +112,60 @@ const steps = ['购物车', '确认订单', '支付', '完成订单']
 const cartItems = computed(() => productStore.cart)
 const cartTotal = computed(() => productStore.cartTotal)
 
-onMounted(() => {
-  // 生成订单
-  orderId.value = `ORD-${generateId()}`
-
-  // 构建订单对象
-  const orderItems: OrderItem[] = cartItems.value.map(item => ({
-    product: item.product,
-    quantity: item.quantity,
-    subtotal: item.product.price * item.quantity,
-  }))
-
-  const order: Order = {
-    id: orderId.value,
-    items: orderItems,
-    total: cartTotal.value,
-    status: 'confirmed',
-    createdAt: new Date().toISOString(),
-    shippingAddress: '示例地址',
-    paymentMethod: 'card',
+onMounted(async () => {
+  if (!userStore.isLoggedIn) {
+    try {
+      await userStore.loadCurrentUser()
+    } catch {
+      router.push('/auth/login')
+      return
+    }
   }
 
-  // 添加订单到用户 store
-  userStore.addOrder(order)
+  if (cartItems.value.length === 0) {
+    return
+  }
 
-  // 清空购物车
-  productStore.clearCart()
+  let shipping = {
+    name: '',
+    phone: '',
+    address: '',
+  }
+  if (typeof window !== 'undefined') {
+    const cached = sessionStorage.getItem('checkoutShipping')
+    if (cached) {
+      try {
+        shipping = JSON.parse(cached)
+      } catch {
+        shipping = { name: '', phone: '', address: '' }
+      }
+    }
+  }
+
+  try {
+    const orderApi = useOrderApi()
+    const result = await orderApi.createOrder({
+      items: cartItems.value.map(item => ({
+        productId: item.product.id,
+        quantity: item.quantity,
+        selectedSpecs: {},
+      })),
+      shippingAddress: {
+        receiverName: shipping.name || '',
+        receiverPhone: shipping.phone || '',
+        province: '',
+        city: '',
+        district: '',
+        detail: shipping.address || '',
+      },
+      remark: '',
+    })
+    orderId.value = result.orderNo || result.id || ''
+    await userStore.loadOrders()
+  } catch (error) {
+    console.error('Failed to create order:', error)
+  } finally {
+    productStore.clearCart()
+  }
 })
 </script>

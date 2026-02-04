@@ -2,6 +2,7 @@
   <div>
     <NuxtPage />
     <ScrollToTop />
+    <MessageHost />
   </div>
 </template>
 

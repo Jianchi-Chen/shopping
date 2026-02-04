@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed, watch } from 'vue'
 import type { Product, CartItem } from '../types/product'
-import { getMockProducts } from '../utils/mockData'
+import { convertBackendProducts } from '../utils/productConverter'
 
 export const useProductStore = defineStore('product', () => {
   // 状态
@@ -16,10 +16,20 @@ export const useProductStore = defineStore('product', () => {
   const initializeProducts = async () => {
     isLoading.value = true
     try {
-      // 模拟 API 调用延迟
-      await new Promise(resolve => setTimeout(resolve, 500))
-      products.value = getMockProducts()
+      // 使用真实 API
+      const productApi = useProductApi()
+      const response = await productApi.getProducts({ 
+        page: 1, 
+        pageSize: 100, // 获取前100个商品
+        status: 'ON_SALE' // 只获取在售商品
+      })
+      products.value = convertBackendProducts(response.list)
+      
       // 从 localStorage 恢复收藏和购物车
+      loadFromLocalStorage()
+    } catch (error) {
+      console.error('Failed to load products:', error)
+      products.value = []
       loadFromLocalStorage()
     } finally {
       isLoading.value = false

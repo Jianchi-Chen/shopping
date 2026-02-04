@@ -66,10 +66,14 @@
                     class="w-16 h-16 md:w-20 md:h-20 mx-auto mb-2 rounded-full overflow-hidden bg-white shadow hover:shadow-md transition-shadow"
                 >
                     <img
+                        v-if="isImageUrl(category.image)"
                         :src="category.image"
                         :alt="category.name"
                         class="w-full h-full object-cover"
                     />
+                    <div v-else class="w-full h-full flex items-center justify-center text-2xl">
+                        {{ category.image || '🏷️' }}
+                    </div>
                 </div>
                 <p class="text-xs md:text-sm font-medium text-gray-800">
                     {{ category.name }}
@@ -83,12 +87,11 @@
 import { ref, computed, onMounted, onUnmounted } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import type { Category } from "../types/product";
-import { getMockCategories } from "../utils/mockData";
 
 const router = useRouter();
 const route = useRoute();
 const currentSlide = ref(0);
-const categories = ref<Category[]>(getMockCategories());
+const categories = ref<Category[]>([]);
 let slideInterval: number | null = null;
 
 const slides = [
@@ -113,11 +116,15 @@ const currentSlideData = computed(() => {
     return slides[currentSlide.value] || slides[0]!;
 });
 
+const isImageUrl = (value: string) => {
+    return /^https?:\/\//.test(value);
+};
+
 // 处理分类点击 - 再次点击相同分类则取消过滤
-const handleCategoryClick = (categoryId: string) => {
+const handleCategoryClick = (categoryName: string) => {
     const currentCategory = route.query.category as string | undefined;
     
-    if (currentCategory === categoryId) {
+    if (currentCategory === categoryName) {
         // 已选中该分类，则取消过滤
         router.push({
             path: '/',
@@ -127,13 +134,30 @@ const handleCategoryClick = (categoryId: string) => {
         // 选择新分类
         router.push({
             path: '/',
-            query: { category: categoryId }
+            query: { category: categoryName }
         });
     }
 };
 
 // 自动轮播
+const loadCategories = async () => {
+    try {
+        const categoryApi = useCategoryApi();
+        const data = await categoryApi.getCategories();
+        categories.value = data.map(item => ({
+            id: item.id,
+            name: item.name,
+            image: item.icon || '',
+            productCount: item.productCount ?? 0,
+        }));
+    } catch (error) {
+        console.error('Failed to load categories:', error);
+        categories.value = [];
+    }
+};
+
 onMounted(() => {
+    loadCategories();
     slideInterval = window.setInterval(() => {
         currentSlide.value = (currentSlide.value + 1) % slides.length;
     }, 5000);

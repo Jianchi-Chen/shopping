@@ -29,6 +29,14 @@ public class User {
     @Column(name = "merchant_id")
     private String merchantId;
 
+    private String name;
+
+    private String email;
+
+    private String phone;
+
+    private String avatar;
+
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;

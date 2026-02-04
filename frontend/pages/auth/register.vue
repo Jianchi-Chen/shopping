@@ -211,13 +211,13 @@ const handleRegister = async () => {
   }
 
   isLoading.value = true
-
-  // 模拟注册延迟
-  await new Promise(resolve => setTimeout(resolve, 500))
-
-  await userStore.register(form.name, form.email, form.password)
-
-  // 注册成功，跳转到首页
-  router.push('/')
+  try {
+    await userStore.register(form.name, form.email, form.password)
+    router.push('/')
+  } catch (error: any) {
+    errors.submit = error?.message || '注册失败，请稍后重试'
+  } finally {
+    isLoading.value = false
+  }
 }
 </script>

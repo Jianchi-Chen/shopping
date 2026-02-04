@@ -3,6 +3,7 @@ package io.cjc.backend.controller;
 import io.cjc.backend.common.ApiResponse;
 import io.cjc.backend.common.PageResponse;
 import io.cjc.backend.dto.ProductDTO;
+import io.cjc.backend.dto.ProductDetailDTO;
 import io.cjc.backend.enums.ProductStatus;
 import io.cjc.backend.service.ProductService;
 import lombok.Data;
@@ -34,6 +35,12 @@ public class ProductController {
     @PostMapping("/status")
     public ApiResponse<ProductDTO> updateStatus(@RequestBody UpdateStatusRequest request) {
         ProductDTO result = productService.updateStatus(request.getId(), request.getStatus());
+        return ApiResponse.success(result);
+    }
+
+    @GetMapping("/{id}")
+    public ApiResponse<ProductDetailDTO> getProductById(@PathVariable String id) {
+        ProductDetailDTO result = productService.getProductById(id);
         return ApiResponse.success(result);
     }
 

@@ -8,7 +8,7 @@
           <button
             v-for="category in categories"
             :key="category.id"
-            @click="$emit('category-select', category.id)"
+            @click="$emit('category-select', category.name)"
             class="block w-full text-left text-sm text-gray-600 hover:text-orange-500 py-2 transition-colors"
           >
             {{ category.name }}
@@ -91,11 +91,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import type { Category } from '../types/product'
-import { getMockCategories } from '../utils/mockData'
 
-const categories = ref<Category[]>(getMockCategories())
+const categories = ref<Category[]>([])
 const priceRange = ref('all')
 const customMinPrice = ref<number | null>(null)
 const customMaxPrice = ref<number | null>(null)
@@ -105,6 +104,26 @@ const emit = defineEmits<{
   'price-filter': [range: string, min?: number, max?: number]
   'reset-filters': []
 }>()
+
+const loadCategories = async () => {
+  try {
+    const categoryApi = useCategoryApi()
+    const data = await categoryApi.getCategories()
+    categories.value = data.map(item => ({
+      id: item.id,
+      name: item.name,
+      image: item.icon || '',
+      productCount: item.productCount ?? 0,
+    }))
+  } catch (error) {
+    console.error('Failed to load categories:', error)
+    categories.value = []
+  }
+}
+
+onMounted(() => {
+  loadCategories()
+})
 
 // 处理预设价格范围变化
 const handlePriceChange = (range: string) => {

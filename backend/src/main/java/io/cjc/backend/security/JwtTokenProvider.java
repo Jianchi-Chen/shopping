@@ -25,8 +25,9 @@ public class JwtTokenProvider {
         return Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
     }
 
-    public String generateToken(String username, String role, String merchantId) {
+    public String generateToken(String userId, String username, String role, String merchantId) {
         Map<String, Object> claims = new HashMap<>();
+        claims.put("userId", userId);
         claims.put("role", role);
         if (merchantId != null) {
             claims.put("merchantId", merchantId);
@@ -39,6 +40,10 @@ public class JwtTokenProvider {
                 .expiration(new Date(System.currentTimeMillis() + expiration))
                 .signWith(getSigningKey())
                 .compact();
+    }
+
+    public String getUserIdFromToken(String token) {
+        return getClaimsFromToken(token).get("userId", String.class);
     }
 
     public String getUsernameFromToken(String token) {

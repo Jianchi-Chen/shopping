@@ -44,6 +44,21 @@ public class Product {
     @Column(name = "shop_name")
     private String shopName;
 
+    @Column(columnDefinition = "TEXT")
+    private String description;
+
+    @Column(columnDefinition = "TEXT")
+    private String images;
+
+    @Column(columnDefinition = "TEXT")
+    private String specs;
+
+    @Column(precision = 3, scale = 2)
+    private BigDecimal rating;
+
+    @Column(name = "review_count")
+    private Integer reviewCount = 0;
+
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;

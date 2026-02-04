@@ -54,6 +54,24 @@ public class Order {
     @Column(name = "shop_name")
     private String shopName;
 
+    @Column(columnDefinition = "TEXT")
+    private String remark;
+
+    @Column(name = "receiver_name")
+    private String receiverName;
+
+    @Column(name = "receiver_phone")
+    private String receiverPhone;
+
+    private String province;
+
+    private String city;
+
+    private String district;
+
+    @Column(name = "address_detail")
+    private String addressDetail;
+
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OrderItem> items = new ArrayList<>();
 

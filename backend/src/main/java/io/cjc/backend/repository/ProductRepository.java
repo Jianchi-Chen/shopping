@@ -24,4 +24,6 @@ public interface ProductRepository extends JpaRepository<Product, String> {
             @Param("shopId") String shopId,
             Pageable pageable
     );
+
+    long countByCategory(String category);
 }

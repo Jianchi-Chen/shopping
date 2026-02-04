@@ -28,19 +28,22 @@
           <div class="relative">
             <button
               v-if="userStore.isLoggedIn"
-              @click="router.push('/user/profile'); showUserMenu = false"
-              class="hidden sm:flex items-center gap-1 text-gray-700 hover:text-orange-500 transition-colors"
+              @click.stop="showUserMenu = !showUserMenu"
+              class="flex items-center gap-2 text-gray-700 hover:text-orange-500 transition-colors focus:outline-none"
             >
-              <span class="text-xl">👤</span>
-              <span class="text-sm font-medium">{{ userStore.user?.name }}</span>
+              <div v-if="userStore.user?.avatar" class="w-8 h-8 rounded-full overflow-hidden border-2 border-gray-200 hover:border-orange-500 transition-colors">
+                <img :src="userStore.user.avatar" alt="Avatar" class="w-full h-full object-cover" />
+              </div>
+              <span v-else class="text-2xl">👤</span>
+              <span class="hidden sm:inline text-sm font-medium">{{ userStore.user?.name || userStore.user?.username }}</span>
             </button>
             <NuxtLink
               v-else
               to="/auth/login"
-              class="hidden sm:flex items-center gap-1 text-gray-700 hover:text-orange-500 transition-colors"
+              class="flex items-center gap-2 text-gray-700 hover:text-orange-500 transition-colors"
             >
-              <span class="text-xl">👤</span>
-              <span class="text-sm font-medium">登录</span>
+              <span class="text-2xl">👤</span>
+              <span class="hidden sm:inline text-sm font-medium">登录</span>
             </NuxtLink>
 
             <!-- 用户菜单下拉框 -->
@@ -50,7 +53,7 @@
               class="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-50"
             >
               <div v-if="userStore.isLoggedIn" class="p-4 border-b border-gray-200">
-                <p class="font-semibold text-gray-900">{{ userStore.user?.name }}</p>
+                <p class="font-semibold text-gray-900">{{ userStore.user?.name || userStore.user?.username }}</p>
                 <p class="text-sm text-gray-500">{{ userStore.user?.email }}</p>
               </div>
 

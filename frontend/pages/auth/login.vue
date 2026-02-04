@@ -68,8 +68,8 @@
         <!-- 演示账户 -->
         <div class="mt-8 bg-blue-50 border border-blue-200 rounded-lg p-4">
           <p class="text-sm text-blue-700 font-semibold mb-2">📝 演示账户</p>
-          <p class="text-xs text-blue-600 mb-2">邮箱：<span class="font-mono">demo@example.com</span></p>
-          <p class="text-xs text-blue-600">密码：<span class="font-mono">123456</span></p>
+          <p class="text-xs text-blue-600 mb-2">邮箱：<span class="font-mono">admin@example.com</span></p>
+          <p class="text-xs text-blue-600">密码：<span class="font-mono">admin123</span></p>
         </div>
 
         <!-- 底部链接 -->
@@ -142,13 +142,13 @@ const handleLogin = async () => {
   }
 
   isLoading.value = true
-
-  // 模拟登录延迟
-  await new Promise(resolve => setTimeout(resolve, 500))
-
-  await userStore.login(form.email, form.password)
-
-  // 登录成功，跳转到首页
-  router.push('/')
+  try {
+    await userStore.login(form.email, form.password)
+    router.push('/')
+  } catch (error: any) {
+    errors.submit = error?.message || '登录失败，请检查账号或密码'
+  } finally {
+    isLoading.value = false
+  }
 }
 </script>
