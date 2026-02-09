@@ -6,323 +6,203 @@
           <n-gi>
             <div class="flex items-center">
               <div>
-                <n-avatar circle :size="64" :src="schoolboy" />
+                <n-avatar circle :size="64" :src="userStore.getAvatar || defaultAvatar" />
               </div>
               <div>
-                <p class="px-4 text-xl">早安，Ah jung，开始您一天的工作吧！</p>
-                <p class="px-4 text-gray-400">今日阴转大雨，15℃ - 25℃，出门记得带伞哦。</p>
+                <p class="px-4 text-xl">早安,{{ userStore.getNickname }},开始您一天的工作吧！</p>
+                <p class="px-4 text-gray-400">{{ roleLabel }},今日待办 {{ todoCount }} 项</p>
               </div>
             </div>
           </n-gi>
           <n-gi>
             <div class="flex justify-end w-full">
               <div class="flex flex-col justify-center flex-1 text-right">
-                <span class="text-secondary">项目数</span>
-                <span class="text-2xl">16</span>
+                <span class="text-secondary">已上架商品</span>
+                <span class="text-2xl">{{ productCount }}</span>
               </div>
               <div class="flex flex-col justify-center flex-1 text-right">
                 <span class="text-secondary">待办</span>
-                <span class="text-2xl">3/15</span>
-              </div>
-              <div class="flex flex-col justify-center flex-1 text-right">
-                <span class="text-secondary">消息</span>
-                <span class="text-2xl">35</span>
+                <span class="text-2xl">{{ finishedTodoCount }}/{{ todoCount }}</span>
               </div>
             </div>
           </n-gi>
         </n-grid>
       </n-card>
     </div>
-    <n-grid class="mt-4" cols="2 s:1 m:1 l:2 xl:2 2xl:2" responsive="screen" :x-gap="12" :y-gap="9">
-      <n-gi>
-        <n-card
-          :segmented="{ content: true }"
-          content-style="padding: 0;"
-          :bordered="false"
-          size="small"
-          title="项目"
-        >
-          <div class="flex flex-wrap project-card">
-            <n-card
-              size="small"
-              class="cursor-pointer project-card-item ms:w-1/2 md:w-1/3"
-              hoverable
-            >
-              <div class="flex">
-                <span>
-                  <n-icon size="30">
-                    <GithubOutlined />
-                  </n-icon>
-                </span>
-                <span class="ml-4 text-lg">Github</span>
-              </div>
-              <div class="flex h-10 mt-2 text-gray-400">
-                是一个面向开源及私有软件项目的托管平台。
-              </div>
-              <div class="flex h-10 mt-2 text-gray-400"> 开源君，2021-07-04 </div>
-            </n-card>
-            <n-card
-              size="small"
-              class="cursor-pointer project-card-item ms:w-1/2 md:w-1/3"
-              hoverable
-            >
-              <div class="flex">
-                <span>
-                  <n-icon size="30" color="#42b983">
-                    <LogoVue />
-                  </n-icon>
-                </span>
-                <span class="ml-4 text-lg">Vue</span>
-              </div>
-              <div class="flex h-10 mt-2 text-gray-400"> 渐进式 JavaScript 框架 </div>
-              <div class="flex h-10 mt-2 text-gray-400"> 学不动也要学，2021-07-04 </div>
-            </n-card>
-            <n-card
-              size="small"
-              class="cursor-pointer project-card-item ms:w-1/2 md:w-1/3"
-              hoverable
-            >
-              <div class="flex">
-                <span>
-                  <n-icon size="30" color="#e44c27">
-                    <Html5Outlined />
-                  </n-icon>
-                </span>
-                <span class="ml-4 text-lg">Html5</span>
-              </div>
-              <div class="flex h-10 mt-2 text-gray-400"> HTML5是互联网的下一代标准。 </div>
-              <div class="flex h-10 mt-2 text-gray-400"> 撸码也是一种艺术 2021-04-01 </div>
-            </n-card>
-            <n-card
-              size="small"
-              class="cursor-pointer project-card-item ms:w-1/2 md:w-1/3"
-              hoverable
-            >
-              <div class="flex">
-                <span>
-                  <n-icon size="30" color="#dd0031">
-                    <LogoAngular />
-                  </n-icon>
-                </span>
-                <span class="ml-4 text-lg">Angular</span>
-              </div>
-              <div class="flex h-10 mt-2 text-gray-400"> 现代 Web 开发平台，百万粉丝热捧。 </div>
-              <div class="flex h-10 mt-2 text-gray-400"> 铁粉君 2021-07-04。 </div>
-            </n-card>
-            <n-card
-              size="small"
-              class="cursor-pointer project-card-item ms:w-1/2 md:w-1/3"
-              hoverable
-            >
-              <div class="flex">
-                <span>
-                  <n-icon size="30" color="#61dafb">
-                    <LogoReact />
-                  </n-icon>
-                </span>
-                <span class="ml-4 text-lg">React</span>
-              </div>
-              <div class="flex h-10 mt-2 text-gray-400"> 用于构建用户界面的 JavaScript 库。 </div>
-              <div class="flex h-10 mt-2 text-gray-400"> 技术牛 2021-07-04。 </div>
-            </n-card>
-            <n-card
-              size="small"
-              class="cursor-pointer project-card-item ms:w-1/2 md:w-1/3"
-              hoverable
-            >
-              <div class="flex">
-                <span>
-                  <n-icon size="30">
-                    <LogoJavascript />
-                  </n-icon>
-                </span>
-                <span class="ml-4 text-lg">Js</span>
-              </div>
-              <div class="flex h-10 mt-2 text-gray-400"> 路是走出来的，而不是空想出来的。 </div>
-              <div class="flex h-10 mt-2 text-gray-400"> 架构组 2021-07-04 </div>
-            </n-card>
-          </div>
-        </n-card>
 
+    <n-grid class="mt-4" cols="1 s:1 m:1 l:1 xl:1 2xl:1" responsive="screen" :x-gap="12" :y-gap="9">
+      <n-gi>
         <n-card
           :segmented="{ content: true }"
           content-style="padding-top: 0;padding-bottom: 0;"
           :bordered="false"
           size="small"
-          title="动态"
-          class="mt-4"
+          title="待办列表"
         >
-          <template #header-extra><a href="javascript:;">更多</a></template>
-          <n-list>
-            <n-list-item>
-              <template #prefix>
-                <n-avatar circle :size="40" :src="schoolboy" />
-              </template>
-              <n-thing title="Ah Jung 刚才把工作台页面随便写了一些，凑合能看了！">
-                <template #description
-                  ><p class="text-xs text-gray-500">2021-07-04 22:37:16</p></template
-                >
-              </n-thing>
-            </n-list-item>
-            <n-list-item>
-              <template #prefix>
-                <n-avatar circle :size="40" :src="schoolboy" />
-              </template>
-              <n-thing title="Ah Jung 在 开源组 创建了项目 naive-ui-admin？">
-                <template #description
-                  ><p class="text-xs text-gray-500">2021-07-04 09:37:16</p></template
-                >
-              </n-thing>
-            </n-list-item>
-            <n-list-item>
-              <template #prefix>
-                <n-avatar circle :size="40" :src="schoolboy" />
-              </template>
-              <n-thing title="@It界风清扬，向naive-ui-admin提交了一个bug，抽时间看看吧！">
-                <template #description
-                  ><p class="text-xs text-gray-500">2021-07-04 22:37:16</p></template
-                >
-              </n-thing>
-            </n-list-item>
-            <n-list-item>
-              <template #prefix>
-                <n-avatar circle :size="40" :src="schoolboy" />
-              </template>
-              <n-thing title="技术部那几位童鞋，再次警告，不要摸鱼，不要摸鱼，不要摸鱼啦！">
-                <template #description
-                  ><p class="text-xs text-gray-500">2021-07-04 09:37:16</p></template
-                >
-              </n-thing>
-            </n-list-item>
-            <n-list-item>
-              <template #prefix>
-                <n-avatar circle :size="40" :src="schoolboy" />
-              </template>
-              <n-thing title="上班不摸鱼，和咸鱼有什么区别（这话真不是我说的哈）！">
-                <template #description
-                  ><p class="text-xs text-gray-500">2021-07-04 20:37:16</p></template
-                >
-              </n-thing>
-            </n-list-item>
-            <n-list-item>
-              <template #prefix>
-                <n-avatar circle :size="40" :src="schoolboy" />
-              </template>
-              <n-thing title="页面切换其实也支持缓存，只是加了过度效果，看起来像是重新渲染了">
+          <template #header-extra>
+            <n-button text type="primary" @click="showAddTodo = true">+ 添加</n-button>
+          </template>
+          <n-list v-if="todoList.length > 0">
+            <n-list-item v-for="item in todoList" :key="item.id">
+              <n-thing :title="item.title">
                 <template #description>
-                  <p class="text-gray-400">
-                    <n-input type="text" placeholder="不信，输点文字试试" />
-                  </p>
+                  <p class="text-xs text-gray-500">{{ item.createTime }}</p>
+                </template>
+                <template #action>
+                  <n-space>
+                    <n-tag v-if="item.status === 'PENDING'" type="warning">待处理</n-tag>
+                    <n-tag v-else type="success">已完成</n-tag>
+                    <n-button
+                      v-if="item.status === 'PENDING'"
+                      size="small"
+                      @click="completeTodo(item.id)"
+                      >完成</n-button
+                    >
+                  </n-space>
                 </template>
               </n-thing>
             </n-list-item>
           </n-list>
-        </n-card>
-      </n-gi>
-      <n-gi>
-        <n-card
-          :segmented="{ content: true }"
-          content-style="padding: 0;"
-          :bordered="false"
-          size="small"
-          title="快捷操作"
-        >
-          <div class="flex flex-wrap project-card">
-            <n-card size="small" class="cursor-pointer project-card-item" hoverable>
-              <div class="flex flex-col justify-center text-gray-500">
-                <span class="text-center">
-                  <n-icon size="30" color="#68c755">
-                    <DashboardOutlined />
-                  </n-icon>
-                </span>
-                <span class="text-center text-lx">主控台</span>
-              </div>
-            </n-card>
-            <n-card size="small" class="cursor-pointer project-card-item" hoverable>
-              <div class="flex flex-col justify-center text-gray-500">
-                <span class="text-center">
-                  <n-icon size="30" color="#fab251">
-                    <ProfileOutlined />
-                  </n-icon>
-                </span>
-                <span class="text-center text-lx">列表</span>
-              </div>
-            </n-card>
-            <n-card size="small" class="cursor-pointer project-card-item" hoverable>
-              <div class="flex flex-col justify-center text-gray-500">
-                <span class="text-center">
-                  <n-icon size="30" color="#1890ff">
-                    <FileProtectOutlined />
-                  </n-icon>
-                </span>
-                <span class="text-center text-lx">表单</span>
-              </div>
-            </n-card>
-            <n-card size="small" class="cursor-pointer project-card-item" hoverable>
-              <div class="flex flex-col justify-center text-gray-500">
-                <span class="text-center">
-                  <n-icon size="30" color="#f06b96">
-                    <ApartmentOutlined />
-                  </n-icon>
-                </span>
-                <span class="text-center text-lx">权限管理</span>
-              </div>
-            </n-card>
-            <n-card size="small" class="cursor-pointer project-card-item" hoverable>
-              <div class="flex flex-col justify-center text-gray-500">
-                <span class="text-center">
-                  <n-icon size="30" color="#7238d1">
-                    <SettingOutlined />
-                  </n-icon>
-                </span>
-                <span class="text-center text-lx">系统管理</span>
-              </div>
-            </n-card>
-            <n-card size="small" class="cursor-pointer project-card-item" hoverable>
-              <div class="flex flex-col justify-center text-gray-500">
-                <span class="text-center">
-                  <n-icon size="30" color="">
-                    <DashboardOutlined />
-                  </n-icon>
-                </span>
-                <span class="text-center text-lx">主控台</span>
-              </div>
-            </n-card>
-          </div>
-        </n-card>
-        <n-card :segmented="{ content: true }" :bordered="false" size="small" class="mt-4">
-          <img src="~@/assets/images/Business.svg" class="w-full" />
+          <n-empty v-else description="暂无待办事项" />
         </n-card>
       </n-gi>
     </n-grid>
+
+    <!-- 添加待办弹窗 -->
+    <n-modal v-model:show="showAddTodo">
+      <n-card
+        style="width: 500px"
+        title="添加待办"
+        :bordered="false"
+        size="small"
+        role="dialog"
+        aria-modal="true"
+      >
+        <n-form ref="formRef" :model="todoForm">
+          <n-form-item label="待办标题" path="title">
+            <n-input v-model:value="todoForm.title" placeholder="请输入待办标题" />
+          </n-form-item>
+        </n-form>
+        <template #footer>
+          <n-space justify="end">
+            <n-button @click="showAddTodo = false">取消</n-button>
+            <n-button type="primary" @click="handleAddTodo">确定</n-button>
+          </n-space>
+        </template>
+      </n-card>
+    </n-modal>
   </div>
 </template>
 
-<script lang="ts">
-  export default { name: 'DashboardWorkplace' };
-</script>
-
 <script lang="ts" setup>
-  import schoolboy from '@/assets/images/schoolboy.png';
-  import {
-    GithubOutlined,
-    DashboardOutlined,
-    ProfileOutlined,
-    FileProtectOutlined,
-    SettingOutlined,
-    ApartmentOutlined,
-    Html5Outlined,
-  } from '@vicons/antd';
-  import { LogoVue, LogoAngular, LogoReact, LogoJavascript } from '@vicons/ionicons5';
+  import { ref, onMounted, computed } from 'vue';
+  import { useUserStore } from '@/store/modules/user';
+  import { getTodoList } from '@/api/dashboard/index';
+  import { getProductList } from '@/api/commerce/product';
+
+  const userStore = useUserStore();
+  const defaultAvatar = 'https://07akioni.oss-cn-beijing.aliyuncs.com/07akioni.jpeg';
+
+  const todoList = ref<any[]>([]);
+  const productCount = ref(0);
+  const showAddTodo = ref(false);
+  const todoForm = ref({
+    title: '',
+  });
+
+  const roleLabel = computed(() => {
+    if (userStore.isAdmin) {
+      return '平台管理员';
+    } else if (userStore.isMerchant) {
+      return '商家';
+    }
+    return '用户';
+  });
+
+  const todoCount = computed(() => todoList.value.length);
+  const finishedTodoCount = computed(
+    () => todoList.value.filter((item) => item.status === 'COMPLETED').length
+  );
+
+  const loadTodoList = async () => {
+    try {
+      const data: any = await getTodoList();
+      todoList.value = data || [];
+    } catch (error) {
+      console.error('加载待办列表失败:', error);
+      // Mock 数据
+      todoList.value = [
+        {
+          id: 1,
+          title: '处理待发货订单',
+          status: 'PENDING',
+          createTime: '2026-02-04 09:00',
+        },
+        {
+          id: 2,
+          title: '审核新上架商品',
+          status: 'PENDING',
+          createTime: '2026-02-04 10:00',
+        },
+        {
+          id: 3,
+          title: '回复客户咨询',
+          status: 'COMPLETED',
+          createTime: '2026-02-03 15:00',
+        },
+      ];
+    }
+  };
+
+  const loadProductCount = async () => {
+    try {
+      const params: any = { page: 1, pageSize: 1, status: 'ON_SALE' };
+      if (userStore.isMerchant && userStore.getMerchantId) {
+        params.shopId = userStore.getMerchantId;
+      }
+      const data: any = await getProductList(params);
+      productCount.value = data?.itemCount || 0;
+    } catch (error) {
+      console.error('加载商品数量失败:', error);
+      productCount.value = 0;
+    }
+  };
+
+  const completeTodo = (id: number) => {
+    const todo = todoList.value.find((item) => item.id === id);
+    if (todo) {
+      todo.status = 'COMPLETED';
+    }
+    const message: any = (window as any).$message;
+    message?.success('待办已完成');
+  };
+
+  const handleAddTodo = () => {
+    if (!todoForm.value.title) {
+      const message: any = (window as any).$message;
+      message?.warning('请输入待办标题');
+      return;
+    }
+    todoList.value.unshift({
+      id: Date.now(),
+      title: todoForm.value.title,
+      status: 'PENDING',
+      createTime: new Date().toLocaleString('zh-CN'),
+    });
+    todoForm.value.title = '';
+    showAddTodo.value = false;
+    const message: any = (window as any).$message;
+    message?.success('添加成功');
+  };
+
+  onMounted(() => {
+    loadTodoList();
+    loadProductCount();
+  });
 </script>
 
-<style lang="less" scoped>
-  .project-card {
-    margin-right: -6px;
-
-    &-item {
-      margin: -1px;
-      width: 33.333333%;
-    }
+<style scoped>
+  .text-secondary {
+    color: #999;
   }
 </style>

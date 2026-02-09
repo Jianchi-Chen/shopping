@@ -12,8 +12,9 @@ const routes: Array<RouteRecordRaw> = [
     meta: {
       title: '用户与商家',
       icon: renderIcon(TeamOutlined),
-      sort: 4,
+      sort: 2,
       permissions: ['identity_merchant_list', 'identity_user_list'],
+      roles: ['ADMIN'], // 仅 ADMIN 可见
     },
     children: [
       {

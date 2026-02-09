@@ -1,134 +1,249 @@
 <template>
-  <!-- 服务于前端：用户登录身份、订单与售后可用性 -->
-  <div>
-    <div class="n-layout-page-header">
-      <n-card :bordered="false" title="用户管理">
-        用于维护用户状态与登录权限（Mock 数据）。
-      </n-card>
-    </div>
-    <n-card :bordered="false" class="mt-4 proCard">
-      <div class="mb-3">
+  <n-card :bordered="false" class="proCard">
+    <n-space vertical>
+      <n-space justify="space-between">
         <n-space>
-          <n-input v-model:value="params.keyword" placeholder="姓名/手机号" clearable />
+          <n-input
+            v-model:value="queryParams.keyword"
+            placeholder="搜索用户名"
+            clearable
+            @keyup.enter="handleSearch"
+          />
           <n-select
-            v-model:value="params.status"
+            v-model:value="queryParams.status"
             :options="statusOptions"
             placeholder="用户状态"
             clearable
+            style="width: 150px"
+            @update:value="handleSearch"
           />
-          <n-button type="primary" @click="reloadTable">查询</n-button>
-          <n-button @click="resetFilters">重置</n-button>
+          <n-button type="primary" @click="handleSearch">搜索</n-button>
         </n-space>
-      </div>
-      <BasicTable
+      </n-space>
+
+      <n-data-table
         :columns="columns"
-        :request="loadDataTable"
-        :row-key="(row: Customer) => row.id"
-        ref="actionRef"
-        :actionColumn="actionColumn"
+        :data="dataList"
+        :loading="loading"
+        :pagination="pagination"
+        :row-key="(row: any) => row.id"
+        @update:page="handlePageChange"
       />
-    </n-card>
-  </div>
+    </n-space>
+
+    <!-- 用户状态修改弹窗 -->
+    <n-modal v-model:show="showStatusModal">
+      <n-card
+        style="width: 400px"
+        title="修改用户状态"
+        :bordered="false"
+        size="small"
+        role="dialog"
+        aria-modal="true"
+      >
+        <n-form>
+          <n-form-item label="用户状态">
+            <n-select v-model:value="editStatus" :options="statusOptions" />
+          </n-form-item>
+        </n-form>
+        <template #footer>
+          <n-space justify="end">
+            <n-button @click="showStatusModal = false">取消</n-button>
+            <n-button type="primary" @click="handleUpdateStatus">确定</n-button>
+          </n-space>
+        </template>
+      </n-card>
+    </n-modal>
+  </n-card>
 </template>
 
 <script lang="ts" setup>
-  // 服务于前端功能：用户登录、订单与售后功能权限
-  import { h, reactive, ref, unref } from 'vue';
-  import { NTag, useMessage } from 'naive-ui';
-  import { BasicTable, TableAction, type BasicColumn } from '@/components/Table';
-  import { getCustomerList, updateCustomerStatus } from '@/api/identity/users';
-  import type { Customer, CustomerStatus } from '@/types/Customer';
+  import { h, ref, onMounted, reactive } from 'vue';
+  import { NButton, NSpace, NTag } from 'naive-ui';
+  import { getUserList, updateUserStatus } from '@/api/identity/user';
 
-  const message = useMessage();
-  const actionRef = ref();
+  const loading = ref(false);
+  const dataList = ref<any[]>([]);
+  const showStatusModal = ref(false);
+  const editUserId = ref<number | null>(null);
+  const editStatus = ref('');
 
-  const params = reactive<{ keyword: string; status: CustomerStatus | '' }>({
+  const queryParams = reactive({
     keyword: '',
-    status: '',
+    status: null,
+    page: 1,
+    pageSize: 10,
+  });
+
+  const pagination = reactive({
+    page: 1,
+    pageSize: 10,
+    pageCount: 1,
+    itemCount: 0,
+    showSizePicker: true,
+    pageSizes: [10, 20, 50, 100],
+    onChange: (page: number) => {
+      queryParams.page = page;
+      handleSearch();
+    },
+    onUpdatePageSize: (pageSize: number) => {
+      queryParams.pageSize = pageSize;
+      queryParams.page = 1;
+      handleSearch();
+    },
   });
 
   const statusOptions = [
-    { label: '正常', value: 'active' },
-    { label: '已禁用', value: 'banned' },
+    { label: '正常', value: 'ACTIVE' },
+    { label: '已封禁', value: 'BANNED' },
   ];
 
-  const statusTextMap: Record<CustomerStatus, string> = {
-    active: '正常',
-    banned: '已禁用',
+  const statusMap: Record<string, { label: string; type: any }> = {
+    ACTIVE: { label: '正常', type: 'success' },
+    BANNED: { label: '已封禁', type: 'error' },
   };
 
-  const columns: BasicColumn<Customer>[] = [
-    { title: '用户ID', key: 'id', width: 120 },
-    { title: '姓名', key: 'name', width: 140 },
-    { title: '手机号', key: 'phone', width: 140 },
+  const columns = [
+    {
+      title: '用户ID',
+      key: 'id',
+      width: 80,
+    },
+    {
+      title: '用户名',
+      key: 'username',
+      width: 150,
+    },
+    {
+      title: '姓名',
+      key: 'name',
+      width: 120,
+    },
+    {
+      title: '邮箱',
+      key: 'email',
+      width: 200,
+      ellipsis: {
+        tooltip: true,
+      },
+    },
+    {
+      title: '电话',
+      key: 'phone',
+      width: 130,
+    },
+    {
+      title: '角色',
+      key: 'role',
+      width: 100,
+      render(row: any) {
+        const roleMap: Record<string, string> = {
+          USER: '用户',
+          MERCHANT: '商家',
+          ADMIN: '管理员',
+        };
+        return roleMap[row.role] || row.role;
+      },
+    },
     {
       title: '状态',
       key: 'status',
+      width: 100,
+      render(row: any) {
+        const status = statusMap[row.status] || { label: '未知', type: 'default' };
+        return h(NTag, { type: status.type }, { default: () => status.label });
+      },
+    },
+    {
+      title: '创建时间',
+      key: 'createdAt',
+      width: 160,
+    },
+    {
+      title: '操作',
+      key: 'actions',
       width: 120,
-      render(record) {
-        const type = record.status === 'active' ? 'success' : 'error';
+      render(row: any) {
         return h(
-          NTag,
-          { type },
+          NSpace,
+          {},
           {
-            default: () => statusTextMap[record.status],
+            default: () => [
+              h(
+                NButton,
+                {
+                  size: 'small',
+                  type: 'primary',
+                  text: true,
+                  onClick: () => handleEditStatus(row),
+                },
+                { default: () => '修改状态' }
+              ),
+            ],
           }
         );
       },
     },
-    { title: '订单数', key: 'orderCount', width: 100 },
-    {
-      title: '累计消费',
-      key: 'totalSpent',
-      width: 120,
-      render(record) {
-        return `￥${record.totalSpent}`;
-      },
-    },
-    { title: '注册时间', key: 'createdAt', width: 160 },
   ];
 
-  const actionColumn = reactive({
-    width: 180,
-    title: '操作',
-    key: 'action',
-    fixed: 'right',
-    render(record: Customer) {
-      return h(TableAction, {
-        style: 'button',
-        actions: [
-          {
-            label: record.status === 'banned' ? '启用' : '禁用',
-            onClick: () => updateStatus(record, record.status === 'banned' ? 'active' : 'banned'),
-            auth: ['identity_user_update'],
-          },
-        ],
-      });
-    },
-  });
-
-  const loadDataTable = async (res: any) => {
-    const merged = {
-      ...unref(params),
-      ...res,
-      status: params.status || undefined,
-    };
-    return await getCustomerList(merged);
+  const loadData = async () => {
+    try {
+      loading.value = true;
+      const data: any = await getUserList(queryParams);
+      dataList.value = data.list || [];
+      pagination.page = data.page || 1;
+      pagination.pageCount = data.pageCount || 1;
+      pagination.itemCount = data.itemCount || 0;
+    } catch (error) {
+      console.error('加载用户列表失败:', error);
+      const message: any = (window as any).$message;
+      message?.error('加载用户列表失败');
+    } finally {
+      loading.value = false;
+    }
   };
 
-  function reloadTable() {
-    actionRef.value?.reload();
-  }
+  const handleSearch = () => {
+    queryParams.page = 1;
+    loadData();
+  };
 
-  function resetFilters() {
-    params.keyword = '';
-    params.status = '';
-    reloadTable();
-  }
+  const handlePageChange = (page: number) => {
+    queryParams.page = page;
+    loadData();
+  };
 
-  async function updateStatus(record: Customer, status: CustomerStatus) {
-    await updateCustomerStatus({ id: record.id, status });
-    message.success('用户状态已更新');
-    reloadTable();
-  }
+  const handleEditStatus = (row: any) => {
+    editUserId.value = row.id;
+    editStatus.value = row.status;
+    showStatusModal.value = true;
+  };
+
+  const handleUpdateStatus = async () => {
+    if (!editUserId.value) return;
+    try {
+      await updateUserStatus({
+        id: editUserId.value,
+        status: editStatus.value,
+      });
+      const message: any = (window as any).$message;
+      message?.success('状态更新成功');
+      showStatusModal.value = false;
+      loadData();
+    } catch (error) {
+      console.error('更新状态失败:', error);
+      const message: any = (window as any).$message;
+      message?.error('更新状态失败');
+    }
+  };
+
+  onMounted(() => {
+    loadData();
+  });
 </script>
+
+<style scoped>
+  .proCard {
+    min-height: 500px;
+  }
+</style>

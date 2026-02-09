@@ -89,12 +89,24 @@ export const useAsyncRouteStore = defineStore({
     async generateRoutes(data) {
       let accessedRouters;
       const permissionsList = data.permissions ?? [];
+      const userRole = data.role || '';
+      
       const routeFilter = (route) => {
         const { meta } = route;
-        const { permissions } = meta || {};
+        const { permissions, roles } = meta || {};
+        
+        // 角色过滤：如果路由配置了 roles，只有匹配的角色才能访问
+        if (roles && roles.length > 0) {
+          if (!roles.includes(userRole)) {
+            return false;
+          }
+        }
+        
+        // 权限过滤
         if (!permissions) return true;
-        return permissionsList.some((item) => permissions.includes(item.value));
+        return permissionsList.some((item) => permissions.includes(item));
       };
+      
       const { permissionMode } = useProjectSetting();
       if (unref(permissionMode) === 'BACK') {
         // 动态获取菜单

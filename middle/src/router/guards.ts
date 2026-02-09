@@ -57,14 +57,28 @@ export function createRouterGuards(router: Router) {
       return;
     }
 
-    const userInfo = await userStore.getInfo();
+    try {
+      const userInfo = await userStore.getInfo();
 
-    const routes = await asyncRouteStore.generateRoutes(userInfo);
+      const routes = await asyncRouteStore.generateRoutes(userInfo);
 
-    // 动态添加可访问路由表
-    routes.forEach((item) => {
-      router.addRoute(item as unknown as RouteRecordRaw);
-    });
+      // 动态添加可访问路由表
+      routes.forEach((item) => {
+        router.addRoute(item as unknown as RouteRecordRaw);
+      });
+    } catch (error) {
+      // 获取用户信息失败，清除token并重定向到登录页
+      storage.remove(ACCESS_TOKEN);
+      next({
+        path: LOGIN_PATH,
+        replace: true,
+        query: {
+          redirect: to.path,
+        },
+      });
+      Loading && Loading.finish();
+      return;
+    }
 
     //添加404
     const isErrorPage = router.getRoutes().findIndex((item) => item.name === ErrorPageRoute.name);

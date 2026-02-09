@@ -12,7 +12,7 @@ const routes: Array<RouteRecordRaw> = [
     meta: {
       title: '商品与订单',
       icon: renderIcon(ShoppingOutlined),
-      sort: 3,
+      sort: 1,
       permissions: ['commerce_product_list', 'commerce_order_list'],
     },
     children: [

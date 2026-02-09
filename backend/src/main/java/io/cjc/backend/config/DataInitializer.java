@@ -87,28 +87,33 @@ public class DataInitializer implements CommandLineRunner {
     }
 
     private void createAdminUserIfMissing() {
-        if (userRepository.existsByUsername("admin")) {
-            return;
+        User admin = userRepository.findByUsername("admin").orElse(null);
+        if (admin == null) {
+            admin = new User();
+            admin.setUsername("admin");
+            admin.setRole(UserRole.ADMIN);
         }
-        User admin = new User();
-        admin.setUsername("admin");
-        admin.setPassword(passwordEncoder.encode("admin123"));
+        if (!passwordEncoder.matches("admin123", admin.getPassword() == null ? "" : admin.getPassword())) {
+            admin.setPassword(passwordEncoder.encode("admin123"));
+        }
         admin.setRole(UserRole.ADMIN);
         userRepository.save(admin);
-        log.info("管理员账号创建完成");
+        log.info("管理员账号已就绪");
     }
 
     private void createMerchantUserIfMissing() {
-        if (userRepository.existsByUsername("merchant1")) {
-            return;
+        User merchantUser = userRepository.findByUsername("merchant1").orElse(null);
+        if (merchantUser == null) {
+            merchantUser = new User();
+            merchantUser.setUsername("merchant1");
         }
-        User merchantUser = new User();
-        merchantUser.setUsername("merchant1");
-        merchantUser.setPassword(passwordEncoder.encode("merchant123"));
+        if (!passwordEncoder.matches("merchant123", merchantUser.getPassword() == null ? "" : merchantUser.getPassword())) {
+            merchantUser.setPassword(passwordEncoder.encode("merchant123"));
+        }
         merchantUser.setRole(UserRole.MERCHANT);
         merchantUser.setMerchantId("shop-001");
         userRepository.save(merchantUser);
-        log.info("商家账号创建完成");
+        log.info("商家账号已就绪");
     }
 
     private void createMerchantIfMissing() {

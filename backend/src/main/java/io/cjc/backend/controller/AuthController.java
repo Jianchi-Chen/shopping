@@ -7,6 +7,8 @@ import io.cjc.backend.security.UserPrincipal;
 import io.cjc.backend.service.AuthService;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -34,15 +36,22 @@ public class AuthController {
     }
 
     @GetMapping("/me")
-    public ApiResponse<UserProfileDTO> getCurrentUser(@AuthenticationPrincipal UserPrincipal principal) {
+    public ResponseEntity<?> getCurrentUser(@AuthenticationPrincipal UserPrincipal principal) {
+        if (principal == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(ApiResponse.error(401, "未登录"));
+        }
         UserProfileDTO userProfile = authService.getCurrentUserProfile(principal.getUsername());
-        return ApiResponse.success(userProfile);
+        return ResponseEntity.ok(ApiResponse.success(userProfile));
     }
 
     @PutMapping("/me")
     public ApiResponse<UserProfileDTO> updateCurrentUser(
             @AuthenticationPrincipal UserPrincipal principal,
             @RequestBody UpdateProfileRequest request) {
+        if (principal == null) {
+            return ApiResponse.error(401, "未登录");
+        }
         UserProfileDTO userProfile = authService.updateUserProfile(
                 principal.getUsername(),
                 request.getName(),
@@ -56,6 +65,9 @@ public class AuthController {
     public ApiResponse<Void> changePassword(
             @AuthenticationPrincipal UserPrincipal principal,
             @RequestBody ChangePasswordRequest request) {
+        if (principal == null) {
+            return ApiResponse.error(401, "未登录");
+        }
         authService.changePassword(principal.getUsername(), request.getOldPassword(), request.getNewPassword());
         return ApiResponse.success(null);
     }

@@ -1,0 +1,62 @@
+services:
+  db:
+    image: postgres:18
+    environment:
+      POSTGRES_DB: shopping
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - db_data:/var/lib/postgresql
+
+  backend:
+    build:
+      context: ./backend
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/shopping
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+      FILE_UPLOAD_DIR: /app/uploads
+      FILE_UPLOAD_BASE_URL: http://localhost:8080/api/uploads
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./backend:/app
+      - backend_gradle:/home/gradle/.gradle
+      - backend_uploads:/app/uploads
+    depends_on:
+      - db
+
+  frontend:
+    build:
+      context: ./frontend
+    command: ["sh", "-lc", "pnpm install; pnpm dev -- --host 0.0.0.0 --port 3000"]
+    environment:
+      CHOKIDAR_USEPOLLING: "true"
+      CI: "true"
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+      - frontend_node_modules:/app/node_modules
+
+  middle:
+    build:
+      context: ./middle
+    command: ["sh", "-lc", "pnpm install; pnpm dev -- --host 0.0.0.0 --port 5173"]
+    environment:
+      CHOKIDAR_USEPOLLING: "true"
+      CI: "true"
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./middle:/app
+      - middle_node_modules:/app/node_modules
+
+volumes:
+  db_data:
+  backend_gradle:
+  backend_uploads:
+  frontend_node_modules:
+  middle_node_modules:

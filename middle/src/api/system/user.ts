@@ -4,28 +4,14 @@ import { Alova } from '@/utils/http/alova/index';
  * @description: 获取用户信息
  */
 export function getUserInfo() {
-  return Alova.Get<InResult>('/admin_info', {
-    meta: {
-      isReturnNativeResponse: true,
-    },
-  });
+  return Alova.Get<InResult>('/auth/me');
 }
 
 /**
  * @description: 用户登录
  */
 export function login(params) {
-  return Alova.Post<InResult>(
-    '/login',
-    {
-      params,
-    },
-    {
-      meta: {
-        isReturnNativeResponse: true,
-      },
-    }
-  );
+  return Alova.Post<InResult>('/auth/login', params);
 }
 
 /**

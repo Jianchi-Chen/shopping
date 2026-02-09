@@ -36,5 +36,3 @@ start "Spring Boot Backend" java -jar build\libs\backend-0.0.1-SNAPSHOT.jar
 
 echo.
 echo Backend started! Check the new window for logs.
-echo Press any key to exit...
-pause > nul
