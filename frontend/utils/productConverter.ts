@@ -23,14 +23,17 @@ export const convertBackendProduct = (backendProduct: BackendProduct): Product =
     price: backendProduct.price,
     originalPrice: backendProduct.originalPrice,
     category: backendProduct.category,
+    shopName: backendProduct.shopName,
+    status: backendProduct.status,
+    stock: backendProduct.stock,
     
-    // 缺失字段使用默认值
-    image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=300&h=300&fit=crop', // 默认占位图
-    rating: 4.5, // 默认评分
-    reviewCount: 0, // 默认评论数
-    badge: backendProduct.stock < 10 ? '库存紧张' : undefined, // 根据库存生成标签
-    isFavorite: false, // 默认未收藏
-    specs: [], // 默认无规格
+    // 使用后端返回的真实数据
+    image: backendProduct.images?.split(',')[0] || 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=300&h=300&fit=crop',
+    rating: backendProduct.rating || 0, // 使用后端的真实评分
+    reviewCount: backendProduct.reviewCount || 0, // 使用后端的真实评论数
+    badge: backendProduct.stock < 10 ? '库存紧张' : undefined,
+    isFavorite: false,
+    specs: [],
   }
 }
 

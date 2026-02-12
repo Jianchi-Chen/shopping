@@ -10,6 +10,6 @@ export function getUserList(params: any) {
 /**
  * 更新用户状态
  */
-export function updateUserStatus(data: { id: number; status: string }) {
-  return Alova.Post('/identity/users/status', { data });
+export function updateUserStatus(data: { id: string; status: string }) {
+  return Alova.Post('/identity/users/status', data);
 }

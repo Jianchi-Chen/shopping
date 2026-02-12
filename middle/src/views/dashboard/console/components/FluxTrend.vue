@@ -8,27 +8,24 @@
 
   import { basicProps } from './props';
 
-  defineProps({
+  const props = defineProps({
     ...basicProps,
+    xData: {
+      type: Array as () => string[],
+      default: () => [],
+    },
+    series: {
+      type: Array as () => { name: string; data: number[] }[],
+      default: () => [],
+    },
   });
   const chartRef = ref<HTMLDivElement | null>(null);
   const { setOptions } = useECharts(chartRef as Ref<HTMLDivElement>);
 
   onMounted(() => {
-    setOptions({
-      tooltip: {
-        trigger: 'axis',
-        axisPointer: {
-          lineStyle: {
-            width: 1,
-            color: '#019680',
-          },
-        },
-      },
-      xAxis: {
-        type: 'category',
-        boundaryGap: false,
-        data: [
+    const xAxisData = props.xData.length
+      ? props.xData
+      : [
           '6:00',
           '7:00',
           '8:00',
@@ -47,7 +44,41 @@
           '21:00',
           '22:00',
           '23:00',
-        ],
+        ];
+
+    const seriesData = props.series.length
+      ? props.series
+      : [
+          {
+            name: '访问量',
+            data: [
+              111, 222, 4000, 18000, 33333, 55555, 66666, 33333, 14000, 36000, 66666, 44444,
+              22222, 11111, 4000, 2000, 500, 333, 222, 111,
+            ],
+          },
+          {
+            name: '成交额',
+            data: [
+              33, 66, 88, 333, 3333, 5000, 18000, 3000, 1200, 13000, 22000, 11000, 2221,
+              1201, 390, 198, 60, 30, 22, 11,
+            ],
+          },
+        ];
+
+    setOptions({
+      tooltip: {
+        trigger: 'axis',
+        axisPointer: {
+          lineStyle: {
+            width: 1,
+            color: '#019680',
+          },
+        },
+      },
+      xAxis: {
+        type: 'category',
+        boundaryGap: false,
+        data: xAxisData,
         splitLine: {
           show: true,
           lineStyle: {
@@ -77,32 +108,16 @@
         },
       ],
       grid: { left: '1%', right: '1%', top: '2  %', bottom: 0, containLabel: true },
-      series: [
-        {
-          smooth: true,
-          data: [
-            111, 222, 4000, 18000, 33333, 55555, 66666, 33333, 14000, 36000, 66666, 44444, 22222,
-            11111, 4000, 2000, 500, 333, 222, 111,
-          ],
-          type: 'line',
-          areaStyle: {},
-          itemStyle: {
-            color: '#5ab1ef',
-          },
+      series: seriesData.map((series, index) => ({
+        name: series.name,
+        smooth: true,
+        data: series.data,
+        type: 'line',
+        areaStyle: {},
+        itemStyle: {
+          color: index === 0 ? '#5ab1ef' : '#019680',
         },
-        {
-          smooth: true,
-          data: [
-            33, 66, 88, 333, 3333, 5000, 18000, 3000, 1200, 13000, 22000, 11000, 2221, 1201, 390,
-            198, 60, 30, 22, 11,
-          ],
-          type: 'line',
-          areaStyle: {},
-          itemStyle: {
-            color: '#019680',
-          },
-        },
-      ],
+      })),
     });
   });
 </script>

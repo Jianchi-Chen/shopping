@@ -1,6 +1,7 @@
 <template>
   <div
     class="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow overflow-hidden h-full flex flex-col"
+    :class="isOutOfStock ? 'opacity-60 grayscale' : ''"
   >
     <!-- 图片容器 -->
     <NuxtLink :to="`/product/${product.id}`" class="relative w-full h-48 bg-gray-100 overflow-hidden group block">
@@ -9,6 +10,10 @@
         :alt="product.title"
         class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
       />
+
+      <div v-if="isOutOfStock" class="absolute inset-0 bg-black/30 flex items-center justify-center">
+        <span class="text-white text-sm font-semibold">缺货</span>
+      </div>
 
       <!-- 角标 -->
       <div v-if="product.badge" class="absolute top-2 left-2">
@@ -36,14 +41,19 @@
 
       <!-- 评分 -->
       <div class="flex items-center gap-1 mb-3">
-        <div class="flex items-center">
-          <span v-for="i in 5" :key="i" class="text-xs">
-            <span v-if="i <= Math.floor(product.rating)" class="text-yellow-400">★</span>
-            <span v-else class="text-gray-300">★</span>
+        <div v-if="product.reviewCount && product.reviewCount > 0" class="flex items-center gap-1">
+          <div class="flex items-center">
+            <span v-for="i in 5" :key="i" class="text-xs">
+              <span v-if="i <= Math.floor(product.rating || 0)" class="text-yellow-400">★</span>
+              <span v-else class="text-gray-300">★</span>
+            </span>
+          </div>
+          <span class="text-xs text-gray-600">
+            ({{ product.reviewCount }})
           </span>
         </div>
-        <span class="text-xs text-gray-600">
-          ({{ product.reviewCount }})
+        <span v-else class="text-xs text-gray-500 italic">
+          暂无评价
         </span>
       </div>
 
@@ -55,6 +65,7 @@
             ¥{{ product.originalPrice }}
           </span>
         </div>
+        <p v-if="isOutOfStock" class="text-xs text-gray-500 mt-1">该商品缺货，可先加入购物车</p>
       </div>
 
       <!-- 规格选择 -->
@@ -93,6 +104,7 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
 import type { Product } from '../types/product'
 
 const props = defineProps<{
@@ -103,6 +115,8 @@ const emit = defineEmits<{
   'add-to-cart': [product: Product]
   'toggle-favorite': [productId: string]
 }>()
+
+const isOutOfStock = computed(() => props.product.status === 'OUT_OF_STOCK' || props.product.stock === 0)
 
 const handleAddToCart = () => {
   emit('add-to-cart', props.product)

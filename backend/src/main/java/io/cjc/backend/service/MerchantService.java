@@ -59,7 +59,9 @@ public class MerchantService {
         dto.setId(merchant.getId());
         dto.setShopId(merchant.getShopId());
         dto.setShopName(merchant.getShopName());
+        dto.setName(merchant.getShopName());  // name映射自shopName
         dto.setOwnerName(merchant.getOwnerName());
+        dto.setContactName(merchant.getOwnerName());  // contactName映射自ownerName
         dto.setContactPhone(merchant.getContactPhone());
         dto.setStatus(merchant.getStatus());
         dto.setCreatedAt(merchant.getCreatedAt().format(DATE_FORMATTER));

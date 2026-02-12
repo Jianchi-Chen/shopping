@@ -174,13 +174,7 @@ const filteredOrders = computed(() => {
 })
 
 onMounted(() => {
-  // 检查登录状态
-  if (!userStore.isLoggedIn) {
-    userStore.loadCurrentUser().catch(() => {
-      router.push('/auth/login')
-    })
-  }
-  userStore.loadOrders()
+  router.replace('/account/orders')
 })
 
 const getStatusText = (status: string): string => {

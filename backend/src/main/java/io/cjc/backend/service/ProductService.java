@@ -3,11 +3,13 @@ package io.cjc.backend.service;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.cjc.backend.common.PageResponse;
+import io.cjc.backend.dto.CreateProductRequest;
 import io.cjc.backend.dto.ProductDTO;
 import io.cjc.backend.dto.ProductDetailDTO;
 import io.cjc.backend.entity.Product;
 import io.cjc.backend.enums.ProductStatus;
 import io.cjc.backend.repository.ProductRepository;
+import io.cjc.backend.repository.ProductViewRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -27,6 +29,7 @@ import java.util.stream.Collectors;
 public class ProductService {
     
     private final ProductRepository productRepository;
+    private final ProductViewRepository productViewRepository;
     private final ObjectMapper objectMapper = new ObjectMapper();
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
 
@@ -61,6 +64,18 @@ public class ProductService {
     }
 
     @Transactional
+    public void recordProductView(String productId) {
+        Product product = productRepository.findById(productId).orElse(null);
+        if (product == null) {
+            return;
+        }
+        io.cjc.backend.entity.ProductView view = new io.cjc.backend.entity.ProductView();
+        view.setProductId(productId);
+        view.setShopId(product.getShopId());
+        productViewRepository.save(view);
+    }
+
+    @Transactional
     public ProductDTO updateStatus(String id, ProductStatus status) {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("商品不存在"));
@@ -71,10 +86,52 @@ public class ProductService {
         return toDTO(saved);
     }
 
+    @Transactional
+    public ProductDTO createProduct(CreateProductRequest request) {
+        Product product = new Product();
+        product.setTitle(request.getTitle());
+        product.setSku(request.getSku());
+        product.setPrice(request.getPrice());
+        product.setOriginalPrice(request.getOriginalPrice());
+        product.setStock(request.getStock() == null ? 0 : request.getStock());
+        product.setStatus(request.getStatus() == null ? ProductStatus.ON_SALE : request.getStatus());
+        product.setCategory(request.getCategory());
+        product.setShopId(request.getShopId());
+        product.setShopName(request.getShopName());
+        product.setDescription(request.getDescription());
+        product.setImages(request.getImages());
+        product.setSpecs(request.getSpecs());
+
+        Product saved = productRepository.save(product);
+        return toDTO(saved);
+    }
+
+    @Transactional
+    public ProductDTO updateProduct(String id, CreateProductRequest request) {
+        Product product = productRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("商品不存在"));
+        
+        product.setTitle(request.getTitle());
+        product.setSku(request.getSku());
+        product.setPrice(request.getPrice());
+        product.setOriginalPrice(request.getOriginalPrice());
+        product.setStock(request.getStock() == null ? 0 : request.getStock());
+        product.setStatus(request.getStatus() == null ? ProductStatus.ON_SALE : request.getStatus());
+        product.setCategory(request.getCategory());
+        product.setDescription(request.getDescription());
+        product.setImages(request.getImages());
+        product.setSpecs(request.getSpecs());
+        // shopId和shopName不允许修改
+
+        Product saved = productRepository.save(product);
+        return toDTO(saved);
+    }
+
     private ProductDTO toDTO(Product product) {
         ProductDTO dto = new ProductDTO();
         dto.setId(product.getId());
         dto.setTitle(product.getTitle());
+        dto.setName(product.getTitle());  // name映射自title
         dto.setSku(product.getSku());
         dto.setPrice(product.getPrice());
         dto.setOriginalPrice(product.getOriginalPrice());
@@ -83,7 +140,12 @@ public class ProductService {
         dto.setCategory(product.getCategory());
         dto.setShopId(product.getShopId());
         dto.setShopName(product.getShopName());
-        dto.setUpdatedAt(product.getUpdatedAt().format(DATE_FORMATTER));
+        dto.setImages(product.getImages());  // 添加images字段
+        dto.setRating(product.getRating());  // 添加评分
+        dto.setReviewCount(product.getReviewCount());  // 添加评论数
+        if (product.getUpdatedAt() != null) {
+            dto.setUpdatedAt(product.getUpdatedAt().format(DATE_FORMATTER));
+        }
         return dto;
     }
 
@@ -102,8 +164,12 @@ public class ProductService {
         dto.setDescription(product.getDescription());
         dto.setRating(product.getRating());
         dto.setReviewCount(product.getReviewCount());
-        dto.setCreatedAt(product.getCreatedAt().format(DATE_FORMATTER));
-        dto.setUpdatedAt(product.getUpdatedAt().format(DATE_FORMATTER));
+        if (product.getCreatedAt() != null) {
+            dto.setCreatedAt(product.getCreatedAt().format(DATE_FORMATTER));
+        }
+        if (product.getUpdatedAt() != null) {
+            dto.setUpdatedAt(product.getUpdatedAt().format(DATE_FORMATTER));
+        }
         
         // 解析图片列表（逗号分隔）
         if (product.getImages() != null && !product.getImages().isEmpty()) {

@@ -6,10 +6,15 @@ import io.cjc.backend.enums.UserRole;
 import io.cjc.backend.repository.UserRepository;
 import io.cjc.backend.security.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.net.URI;
+
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class AuthService {
@@ -17,6 +22,9 @@ public class AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
+
+    @Value("${file.upload.base-url:http://localhost:8080/api/uploads}")
+    private String uploadBaseUrl;
 
     @Transactional
     public String register(String username, String password, UserRole role) {
@@ -36,13 +44,20 @@ public class AuthService {
 
     @Transactional(readOnly = true)
     public String login(String username, String password) {
+        log.debug("登录请求 - 用户名: {}", username);
         User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("用户名或密码错误"));
+                .orElseThrow(() -> {
+                    log.error("登录失败 - 用户不存在: {}", username);
+                    return new RuntimeException("用户名或密码错误");
+                });
         
+        log.debug("找到用户: {}, 角色: {}", user.getUsername(), user.getRole());
         if (!passwordEncoder.matches(password, user.getPassword())) {
+            log.error("登录失败 - 密码错误: {}", username);
             throw new RuntimeException("用户名或密码错误");
         }
         
+        log.info("登录成功 - 用户: {}", username);
         return jwtTokenProvider.generateToken(user.getId(), username, user.getRole().name(), user.getMerchantId());
     }
 
@@ -66,7 +81,7 @@ public class AuthService {
             user.setPhone(phone);
         }
         if (avatar != null) {
-            user.setAvatar(avatar);
+            user.setAvatar(normalizeAvatarPath(avatar));
         }
         
         userRepository.save(user);
@@ -94,10 +109,74 @@ public class AuthService {
         dto.setName(user.getName());
         dto.setEmail(user.getEmail());
         dto.setPhone(user.getPhone());
-        dto.setAvatar(user.getAvatar());
+        dto.setAvatar(buildAvatarUrl(user.getAvatar()));
         dto.setRole(user.getRole().name());
         dto.setCreatedAt(user.getCreatedAt());
         dto.setUpdatedAt(user.getUpdatedAt());
         return dto;
+    }
+
+    private String normalizeAvatarPath(String avatar) {
+        if (avatar == null) {
+            return null;
+        }
+
+        String trimmed = avatar.trim();
+        if (trimmed.isEmpty()) {
+            return "";
+        }
+
+        String path = trimmed;
+        if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
+            try {
+                URI uri = URI.create(trimmed);
+                if (uri.getPath() != null && !uri.getPath().isBlank()) {
+                    path = uri.getPath();
+                }
+            } catch (IllegalArgumentException ex) {
+                return trimmed;
+            }
+        } else if (uploadBaseUrl != null && !uploadBaseUrl.isBlank() && trimmed.startsWith(uploadBaseUrl)) {
+            path = trimmed.substring(uploadBaseUrl.length());
+        }
+
+        if (path.startsWith("/api/uploads/")) {
+            path = path.substring("/api/uploads/".length());
+        } else if (path.startsWith("/uploads/")) {
+            path = path.substring("/uploads/".length());
+        } else if (path.startsWith("uploads/")) {
+            path = path.substring("uploads/".length());
+        } else if (path.startsWith("/")) {
+            path = path.substring(1);
+        }
+
+        return path;
+    }
+
+    private String buildAvatarUrl(String avatarPath) {
+        if (avatarPath == null) {
+            return null;
+        }
+
+        String trimmed = avatarPath.trim();
+        if (trimmed.isEmpty()) {
+            return "";
+        }
+
+        if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
+            return trimmed;
+        }
+
+        String base = uploadBaseUrl == null ? "" : uploadBaseUrl.trim();
+        if (base.endsWith("/")) {
+            base = base.substring(0, base.length() - 1);
+        }
+
+        String path = trimmed.startsWith("/") ? trimmed.substring(1) : trimmed;
+        if (base.isEmpty()) {
+            return path;
+        }
+
+        return base + "/" + path;
     }
 }

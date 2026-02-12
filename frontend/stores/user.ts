@@ -8,6 +8,27 @@ export const useUserStore = defineStore('user', () => {
   const orders = ref<Order[]>([])
   const isLoading = ref(false)
 
+  const loadUserFromStorage = () => {
+    if (typeof window === 'undefined') return
+    const saved = localStorage.getItem('user')
+    if (!saved) return
+    try {
+      user.value = JSON.parse(saved) as User
+    } catch (error) {
+      console.error('Failed to parse user from localStorage', error)
+      localStorage.removeItem('user')
+    }
+  }
+
+  const saveUserToStorage = () => {
+    if (typeof window === 'undefined') return
+    if (user.value) {
+      localStorage.setItem('user', JSON.stringify(user.value))
+    }
+  }
+
+  loadUserFromStorage()
+
   const mapOrderStatus = (status: string): Order['status'] => {
     switch (status) {
       case 'PENDING_PAYMENT':
@@ -58,6 +79,7 @@ export const useUserStore = defineStore('user', () => {
         avatar: profile.avatar || '',
         isLoggedIn: true,
       }
+      saveUserToStorage()
     } catch (error) {
       user.value = null
       throw error
@@ -96,6 +118,7 @@ export const useUserStore = defineStore('user', () => {
       await authApi.login(username, password)
       await loadCurrentUser()
       await loadOrders()
+      saveUserToStorage()
     } finally {
       isLoading.value = false
     }
@@ -111,6 +134,7 @@ export const useUserStore = defineStore('user', () => {
       await authApi.updateProfile(name)
       await loadCurrentUser()
       await loadOrders()
+      saveUserToStorage()
     } finally {
       isLoading.value = false
     }
@@ -138,6 +162,7 @@ export const useUserStore = defineStore('user', () => {
       phone: result.phone || user.value.phone,
       avatar: result.avatar !== undefined ? result.avatar : user.value.avatar,
     }
+    saveUserToStorage()
   }
 
   // 添加订单

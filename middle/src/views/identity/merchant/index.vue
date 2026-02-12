@@ -61,11 +61,12 @@
   import { h, ref, onMounted, reactive } from 'vue';
   import { NButton, NSpace, NTag } from 'naive-ui';
   import { getMerchantList, updateMerchantStatus } from '@/api/identity/merchant';
+  import { formatMerchantId } from '@/utils/idFormatter';
 
   const loading = ref(false);
   const dataList = ref<any[]>([]);
   const showStatusModal = ref(false);
-  const editMerchantId = ref<number | null>(null);
+  const editMerchantId = ref<string | null>(null);
   const editStatus = ref('');
 
   const queryParams = reactive({
@@ -111,7 +112,10 @@
     {
       title: '商家ID',
       key: 'id',
-      width: 80,
+      width: 120,
+      render(row: any) {
+        return formatMerchantId(row.id);
+      },
     },
     {
       title: '商家名称',
@@ -174,7 +178,14 @@
   const loadData = async () => {
     try {
       loading.value = true;
-      const data: any = await getMerchantList(queryParams);
+      // 过滤掉 null 和 undefined 参数
+      const params: any = Object.entries(queryParams).reduce((acc: any, [key, value]) => {
+        if (value !== null && value !== undefined && value !== '') {
+          acc[key] = value;
+        }
+        return acc;
+      }, {});
+      const data: any = await getMerchantList(params);
       dataList.value = data.list || [];
       pagination.page = data.page || 1;
       pagination.pageCount = data.pageCount || 1;

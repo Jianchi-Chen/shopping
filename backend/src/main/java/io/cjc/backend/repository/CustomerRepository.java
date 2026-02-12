@@ -12,9 +12,9 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface CustomerRepository extends JpaRepository<Customer, String> {
     
-    @Query("SELECT c FROM Customer c WHERE " +
-            "(:keyword IS NULL OR c.name LIKE %:keyword% OR c.phone LIKE %:keyword%) AND " +
-            "(:status IS NULL OR c.status = :status)")
+    @Query("SELECT DISTINCT c FROM Customer c LEFT JOIN FETCH c.user WHERE " +
+            "(:keyword IS NULL OR c.name LIKE %:keyword% OR c.phone LIKE %:keyword% OR c.user.username LIKE %:keyword% OR c.email LIKE %:keyword%) AND " +
+            "(:status IS NULL OR c.status = :status) ORDER BY c.createdAt DESC")
     Page<Customer> findByFilters(
             @Param("keyword") String keyword,
             @Param("status") CustomerStatus status,

@@ -19,7 +19,12 @@
       <div v-if="product" class="grid grid-cols-1 md:grid-cols-2 gap-8 bg-white p-6 rounded-lg shadow-sm">
         <!-- 左侧图片 -->
         <div class="flex items-center justify-center bg-gray-50 rounded-lg p-4">
-          <img :src="product.image" :alt="product.title" class="max-w-full max-h-96 object-cover" />
+          <img
+            :src="product.image"
+            :alt="product.title"
+            class="max-w-full max-h-96 object-cover"
+            :class="isOutOfStock ? 'opacity-60 grayscale' : ''"
+          />
         </div>
 
         <!-- 右侧信息 -->
@@ -27,14 +32,22 @@
           <!-- 标题和评分 -->
           <div>
             <h1 class="text-2xl md:text-3xl font-bold text-gray-900 mb-3">{{ product.title }}</h1>
+            <p v-if="product.shopName" class="text-sm text-gray-600 mb-2">商家: {{ product.shopName }}</p>
             <div class="flex items-center gap-4">
-              <div class="flex items-center">
-                <span v-for="i in 5" :key="i" class="text-lg">
-                  <span v-if="i <= Math.floor(product.rating)" class="text-yellow-400">★</span>
-                  <span v-else class="text-gray-300">★</span>
+              <div v-if="product.reviewCount && product.reviewCount > 0" class="flex items-center">
+                <div class="flex items-center">
+                  <span v-for="i in 5" :key="i" class="text-lg">
+                    <span v-if="i <= Math.floor(product.rating || 0)" class="text-yellow-400">★</span>
+                    <span v-else class="text-gray-300">★</span>
+                  </span>
+                </div>
+                <span class="text-gray-600 text-sm ml-2">
+                  ({{ product.reviewCount }} 条评价)
                 </span>
               </div>
-              <span class="text-gray-600 text-sm">({{ product.reviewCount }} 条评价)</span>
+              <span v-else class="text-gray-500 text-sm italic">
+                暂无评价
+              </span>
             </div>
           </div>
 
@@ -49,7 +62,10 @@
                 省 ¥{{ product.originalPrice - product.price }}
               </span>
             </div>
-            <p class="text-sm text-gray-600">库存: {{ product.stock ?? 100 }} 件</p>
+            <p class="text-sm text-gray-600">
+              库存: {{ product.stock ?? 100 }} 件
+              <span v-if="isOutOfStock" class="ml-2 text-xs text-gray-500">缺货，可先加入购物车</span>
+            </p>
           </div>
 
           <!-- 描述 -->
@@ -131,8 +147,45 @@
 
           <!-- 评价标签页 -->
           <div v-if="activeTab === 'reviews'" class="space-y-4">
-            <div class="text-center py-8 text-gray-500">
+            <div v-if="reviewsLoading" class="text-center py-8">
+              <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500"></div>
+            </div>
+            <div v-else-if="reviews.length === 0" class="text-center py-8 text-gray-500">
               暂无评价，购买后可评价
+            </div>
+            <div v-else class="space-y-6">
+              <div
+                v-for="review in reviews"
+                :key="review.id"
+                class="border-b border-gray-200 pb-6 last:border-b-0"
+              >
+                <!-- 评论头部 -->
+                <div class="flex items-center justify-between mb-3">
+                  <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center">
+                      <span class="text-orange-600 font-semibold">{{ review.reviewerName.charAt(0).toUpperCase() }}</span>
+                    </div>
+                    <div>
+                      <p class="font-medium text-gray-900">{{ review.reviewerName }}</p>
+                      <p class="text-xs text-gray-500">{{ review.createdAt }}</p>
+                    </div>
+                  </div>
+                  <div class="flex">
+                    <span v-for="i in 5" :key="i" class="text-lg">
+                      <span v-if="i <= review.rating" class="text-yellow-400">★</span>
+                      <span v-else class="text-gray-300">★</span>
+                    </span>
+                  </div>
+                </div>
+
+                <!-- 评论内容 -->
+                <p v-if="review.content" class="text-gray-700 text-sm leading-relaxed">
+                  {{ review.content }}
+                </p>
+                <p v-else class="text-gray-500 text-sm italic">
+                  用户未添加评论说明
+                </p>
+              </div>
             </div>
           </div>
         </div>
@@ -162,9 +215,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useProductStore } from '../../stores/product'
+import { useApi } from '../../composables/useApi'
 
 const route = useRoute()
 const productStore = useProductStore()
@@ -173,8 +227,12 @@ const quantity = ref(1)
 const activeTab = ref<'details' | 'reviews'>('details')
 const showNotification = ref(false)
 const notificationMessage = ref('')
+const reviews = ref<any[]>([])
+const reviewsLoading = ref(false)
+const isOutOfStock = computed(() => product.value?.status === 'OUT_OF_STOCK' || product.value?.stock === 0)
+const { request } = useApi()
 
-// 获取当前商品
+// 获取当前商品（直接使用后端返回的rating和reviewCount）
 const product = computed(() => {
   return productStore.getProductById(route.params.id as string)
 })
@@ -207,6 +265,51 @@ const handleToggleFavorite = () => {
     showMessage(message)
   }
 }
+
+const loadReviews = async () => {
+  if (!product.value) return
+  
+  try {
+    reviewsLoading.value = true
+    const data = await request(`/commerce/reviews/product/${product.value.id}`)
+    reviews.value = data || []
+  } catch (error) {
+    console.error('加载评论失败:', error)
+  } finally {
+    reviewsLoading.value = false
+  }
+}
+
+const recordView = async (productId: string) => {
+  try {
+    await request(`/commerce/products/${productId}/view`, { method: 'POST' })
+  } catch (error) {
+    console.error('记录访问失败:', error)
+  }
+}
+
+// 当active tab变化时加载评论
+watch(() => activeTab.value, (newVal) => {
+  if (newVal === 'reviews' && reviews.value.length === 0) {
+    loadReviews()
+  }
+})
+
+watch(
+  () => product.value?.id,
+  (productId) => {
+    if (productId) {
+      recordView(productId)
+    }
+  },
+  { immediate: true }
+)
+
+onMounted(() => {
+  if (product.value && activeTab.value === 'reviews') {
+    loadReviews()
+  }
+})
 </script>
 
 <style scoped>

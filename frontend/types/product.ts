@@ -20,6 +20,8 @@ export interface Product {
   reviewCount: number
   image: string
   category: string
+  shopName?: string
+  status?: 'ON_SALE' | 'OFF_SALE' | 'OUT_OF_STOCK'
   badge?: string // 如 "热销", "新品" 等
   isFavorite: boolean
   description?: string

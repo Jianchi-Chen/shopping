@@ -18,12 +18,12 @@ export const useProductStore = defineStore('product', () => {
     try {
       // 使用真实 API
       const productApi = useProductApi()
-      const response = await productApi.getProducts({ 
-        page: 1, 
-        pageSize: 100, // 获取前100个商品
-        status: 'ON_SALE' // 只获取在售商品
+      const response = await productApi.getProducts({
+        page: 1,
+        pageSize: 100 // 获取前100个商品
       })
       products.value = convertBackendProducts(response.list)
+        .filter(product => product.status !== 'OFF_SALE')
       
       // 从 localStorage 恢复收藏和购物车
       loadFromLocalStorage()

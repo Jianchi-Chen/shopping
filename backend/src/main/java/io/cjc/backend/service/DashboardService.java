@@ -1,14 +1,20 @@
 package io.cjc.backend.service;
 
+import io.cjc.backend.entity.Order;
+import io.cjc.backend.enums.OrderStatus;
 import io.cjc.backend.repository.OrderRepository;
 import io.cjc.backend.repository.ProductRepository;
+import io.cjc.backend.repository.ProductViewRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class DashboardService {
@@ -19,50 +25,142 @@ public class DashboardService {
     @Autowired
     private ProductRepository productRepository;
 
+    @Autowired
+    private ProductViewRepository productViewRepository;
+
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
 
     /**
      * 获取统计数据
+     * 如果shopId不为空，返回该商家的数据；否则返回全站数据
      */
-    public Map<String, Object> getStatistics(Long shopId) {
+        public Map<String, Object> getStatistics(String shopId) {
         Map<String, Object> result = new HashMap<>();
 
-        // 模拟统计数据（实际应从数据库查询）
-        if (shopId != null) {
-            // 商家数据
-            Long productCount = productRepository.count();
-            Long orderCount = orderRepository.count();
-            
-            result.put("visits", 1234);
-            result.put("totalVisits", 56789);
-            result.put("sales", 12345);
-            result.put("totalSales", 678901);
-            result.put("orders", orderCount != null ? orderCount.intValue() : 0);
-            result.put("totalOrders", orderCount != null ? orderCount.intValue() : 0);
-            result.put("revenue", 23456);
-            result.put("totalRevenue", 789012);
-        } else {
-            // 全站数据
-            Long totalProducts = productRepository.count();
-            Long totalOrders = orderRepository.count();
-            
-            result.put("visits", 5678);
-            result.put("totalVisits", 234567);
-            result.put("sales", 56789);
-            result.put("totalSales", 2345678);
-            result.put("orders", totalOrders != null ? totalOrders.intValue() : 0);
-            result.put("totalOrders", totalOrders != null ? totalOrders.intValue() : 0);
-            result.put("revenue", 67890);
-            result.put("totalRevenue", 3456789);
-        }
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime startOfDay = now.toLocalDate().atStartOfDay();
+        LocalDateTime startOfWeek = startOfDay.minusDays(7);
+        LocalDateTime startOfMonth = startOfDay.minusDays(30);
+
+        boolean isMerchant = shopId != null && !shopId.isEmpty();
+
+        long visits = isMerchant
+            ? productViewRepository.countByShopIdAndViewedAtBetween(shopId, startOfDay, now)
+            : productViewRepository.countByViewedAtBetween(startOfDay, now);
+        long totalVisits = isMerchant
+            ? productViewRepository.countByShopId(shopId)
+            : productViewRepository.count();
+
+        BigDecimal weekSales = isMerchant
+            ? orderRepository.sumTotalAmountByShopIdAndStatusAndCreatedAtBetween(shopId, OrderStatus.COMPLETED, startOfWeek, now)
+            : orderRepository.sumTotalAmountByStatusAndCreatedAtBetween(OrderStatus.COMPLETED, startOfWeek, now);
+
+        BigDecimal totalSales = isMerchant
+            ? orderRepository.sumTotalAmountByShopIdAndStatus(shopId, OrderStatus.COMPLETED)
+            : orderRepository.sumTotalAmountByStatus(OrderStatus.COMPLETED);
+
+        long weekOrders = isMerchant
+            ? orderRepository.countByShopIdAndStatusAndCreatedAtBetween(shopId, OrderStatus.COMPLETED, startOfWeek, now)
+            : orderRepository.countByStatusAndCreatedAtBetween(OrderStatus.COMPLETED, startOfWeek, now);
+
+        long totalOrders = isMerchant
+            ? orderRepository.countByShopIdAndStatus(shopId, OrderStatus.COMPLETED)
+            : orderRepository.countByStatus(OrderStatus.COMPLETED);
+
+        BigDecimal monthRevenue = isMerchant
+            ? orderRepository.sumTotalAmountByShopIdAndStatusAndCreatedAtBetween(shopId, OrderStatus.COMPLETED, startOfMonth, now)
+            : orderRepository.sumTotalAmountByStatusAndCreatedAtBetween(OrderStatus.COMPLETED, startOfMonth, now);
+
+        BigDecimal totalRevenue = isMerchant
+            ? orderRepository.sumTotalAmountByShopIdAndStatus(shopId, OrderStatus.COMPLETED)
+            : orderRepository.sumTotalAmountByStatus(OrderStatus.COMPLETED);
+
+        result.put("visits", visits);
+        result.put("totalVisits", totalVisits);
+        result.put("sales", weekSales.setScale(2, RoundingMode.HALF_UP));
+        result.put("totalSales", totalSales.setScale(2, RoundingMode.HALF_UP));
+        result.put("orders", weekOrders);
+        result.put("totalOrders", totalOrders);
+        result.put("revenue", monthRevenue.setScale(2, RoundingMode.HALF_UP));
+        result.put("totalRevenue", totalRevenue.setScale(2, RoundingMode.HALF_UP));
 
         return result;
     }
 
+        /**
+         * 获取趋势数据
+         */
+        public Map<String, Object> getMetrics(String shopId, int days) {
+        Map<String, Object> result = new HashMap<>();
+        List<String> dates = new ArrayList<>();
+        List<Long> visits = new ArrayList<>();
+        List<Long> orders = new ArrayList<>();
+        List<BigDecimal> revenue = new ArrayList<>();
+
+        LocalDate today = LocalDate.now();
+        int range = Math.max(1, Math.min(days, 60));
+        boolean isMerchant = shopId != null && !shopId.isEmpty();
+
+        for (int i = range - 1; i >= 0; i--) {
+            LocalDate date = today.minusDays(i);
+            LocalDateTime start = date.atStartOfDay();
+            LocalDateTime end = date.plusDays(1).atStartOfDay();
+
+            dates.add(date.toString());
+
+            long dayVisits = isMerchant
+                ? productViewRepository.countByShopIdAndViewedAtBetween(shopId, start, end)
+                : productViewRepository.countByViewedAtBetween(start, end);
+            visits.add(dayVisits);
+
+            long dayOrders = isMerchant
+                ? orderRepository.countByShopIdAndStatusAndCreatedAtBetween(shopId, OrderStatus.COMPLETED, start, end)
+                : orderRepository.countByStatusAndCreatedAtBetween(OrderStatus.COMPLETED, start, end);
+            orders.add(dayOrders);
+
+            BigDecimal dayRevenue = isMerchant
+                ? orderRepository.sumTotalAmountByShopIdAndStatusAndCreatedAtBetween(shopId, OrderStatus.COMPLETED, start, end)
+                : orderRepository.sumTotalAmountByStatusAndCreatedAtBetween(OrderStatus.COMPLETED, start, end);
+            revenue.add(dayRevenue.setScale(2, RoundingMode.HALF_UP));
+        }
+
+        result.put("dates", dates);
+        result.put("visits", visits);
+        result.put("orders", orders);
+        result.put("revenue", revenue);
+
+        List<Map<String, Object>> statusBreakdown = Arrays.stream(OrderStatus.values())
+            .map(status -> {
+                long count = isMerchant
+                    ? orderRepository.countByShopIdAndStatus(shopId, status)
+                    : orderRepository.countByStatus(status);
+                Map<String, Object> item = new HashMap<>();
+                item.put("name", status.name());
+                item.put("value", count);
+                return item;
+            })
+            .collect(Collectors.toList());
+        result.put("statusBreakdown", statusBreakdown);
+
+        return result;
+        }
+
+    /**
+     * 计算全站总销售额（已完成订单的总金额）
+     */
+    private BigDecimal calculateTotalRevenue() {
+        try {
+            return orderRepository.sumTotalAmountByStatus(OrderStatus.COMPLETED);
+        } catch (Exception e) {
+            return BigDecimal.ZERO;
+        }
+    }
+
+
     /**
      * 获取待办列表（模拟数据）
      */
-    public List<Map<String, Object>> getTodoList(Long userId) {
+    public List<Map<String, Object>> getTodoList(String userId) {
         List<Map<String, Object>> todos = new ArrayList<>();
 
         // 模拟待办数据

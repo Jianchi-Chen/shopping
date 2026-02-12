@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/dashboard")
+@RequestMapping("/dashboard")
 public class DashboardController {
 
     @Autowired
@@ -26,20 +26,25 @@ public class DashboardController {
     @GetMapping("/statistics")
     @PreAuthorize("hasAnyRole('ADMIN', 'MERCHANT')")
     public ApiResponse<Map<String, Object>> getStatistics(
-            @RequestParam(required = false) Long shopId,
+            @RequestParam(required = false) String shopId,
             @RequestHeader("Authorization") String token) {
         
-        String jwt = token.replace("Bearer ", "");
-        String role = jwtTokenProvider.getRoleFromToken(jwt);
-        String merchantIdStr = jwtTokenProvider.getMerchantIdFromToken(jwt);
-        
-        // 商家只能查看自己的数据
-        if ("MERCHANT".equals(role) && merchantIdStr != null) {
-            shopId = Long.parseLong(merchantIdStr);
+        try {
+            String jwt = token.replace("Bearer ", "");
+            String role = jwtTokenProvider.getRoleFromToken(jwt);
+            String merchantIdStr = jwtTokenProvider.getMerchantIdFromToken(jwt);
+            
+            // 商家只能查看自己的数据
+            if ("MERCHANT".equals(role) && merchantIdStr != null && !merchantIdStr.isEmpty()) {
+                shopId = merchantIdStr;
+            }
+            
+            Map<String, Object> statistics = dashboardService.getStatistics(shopId);
+            return ApiResponse.success(statistics);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ApiResponse.error(500, "获取统计数据失败: " + e.getMessage());
         }
-        
-        Map<String, Object> statistics = dashboardService.getStatistics(shopId);
-        return ApiResponse.success(statistics);
     }
 
     /**
@@ -51,10 +56,30 @@ public class DashboardController {
             @RequestHeader("Authorization") String token) {
         
         String jwt = token.replace("Bearer ", "");
-        String userIdStr = jwtTokenProvider.getUserIdFromToken(jwt);
-        Long userId = Long.parseLong(userIdStr);
+        String userId = jwtTokenProvider.getUserIdFromToken(jwt);
         
         List<Map<String, Object>> todos = dashboardService.getTodoList(userId);
         return ApiResponse.success(todos);
+    }
+
+    /**
+     * 获取趋势数据
+     */
+    @GetMapping("/metrics")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MERCHANT')")
+    public ApiResponse<Map<String, Object>> getMetrics(
+            @RequestParam(defaultValue = "30") Integer days,
+            @RequestParam(required = false) String shopId,
+            @RequestHeader("Authorization") String token) {
+        String jwt = token.replace("Bearer ", "");
+        String role = jwtTokenProvider.getRoleFromToken(jwt);
+        String merchantIdStr = jwtTokenProvider.getMerchantIdFromToken(jwt);
+
+        if ("MERCHANT".equals(role) && merchantIdStr != null && !merchantIdStr.isEmpty()) {
+            shopId = merchantIdStr;
+        }
+
+        Map<String, Object> result = dashboardService.getMetrics(shopId, days);
+        return ApiResponse.success(result);
     }
 }

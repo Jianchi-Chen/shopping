@@ -147,7 +147,11 @@ public class OrderService {
         dto.setPayStatus(savedOrder.getPayStatus());
         dto.setTotalAmount(savedOrder.getTotalAmount());
         dto.setItemCount(savedOrder.getItemCount());
-        dto.setCreatedAt(savedOrder.getCreatedAt().format(DATE_FORMATTER));
+        LocalDateTime createdAt = savedOrder.getCreatedAt();
+        if (createdAt == null) {
+            createdAt = LocalDateTime.now();
+        }
+        dto.setCreatedAt(createdAt.format(DATE_FORMATTER));
         
         return dto;
     }
@@ -214,7 +218,11 @@ public class OrderService {
         dto.setBuyerName(order.getBuyerName());
         dto.setShopId(order.getShopId());
         dto.setShopName(order.getShopName());
-        dto.setCreatedAt(order.getCreatedAt().format(DATE_FORMATTER));
+        LocalDateTime createdAt = order.getCreatedAt();
+        if (createdAt == null) {
+            createdAt = LocalDateTime.now();
+        }
+        dto.setCreatedAt(createdAt.format(DATE_FORMATTER));
         
         List<OrderItemDTO> items = order.getItems().stream()
                 .map(this::toItemDTO)

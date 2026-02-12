@@ -58,10 +58,16 @@ public class CustomerService {
         CustomerDTO dto = new CustomerDTO();
         dto.setId(customer.getId());
         dto.setName(customer.getName());
+        dto.setEmail(customer.getEmail());  // 添加email字段
         dto.setPhone(customer.getPhone());
         dto.setStatus(customer.getStatus());
         dto.setOrderCount(customer.getOrderCount());
         dto.setTotalSpent(customer.getTotalSpent());
+        // 从User获取username和avatar
+        if (customer.getUser() != null) {
+            dto.setUsername(customer.getUser().getUsername());
+            dto.setAvatar(customer.getUser().getAvatar());
+        }
         dto.setCreatedAt(customer.getCreatedAt().format(DATE_FORMATTER));
         return dto;
     }

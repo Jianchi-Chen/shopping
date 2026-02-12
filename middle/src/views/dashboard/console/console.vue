@@ -114,14 +114,43 @@
         </n-card>
       </n-grid-item>
     </n-grid>
+
+    <n-grid cols="1 s:1 m:2 l:3" responsive="screen" :x-gap="12" :y-gap="12" class="mt-4">
+      <n-grid-item>
+        <n-card title="访问与成交趋势" :bordered="false" size="small">
+          <FluxTrend
+            :height="'260px'"
+            :x-data="metrics.dates"
+            :series="trendSeries"
+          />
+        </n-card>
+      </n-grid-item>
+      <n-grid-item>
+        <n-card title="订单量趋势" :bordered="false" size="small">
+          <VisitAmount
+            :height="'260px'"
+            :x-data="metrics.dates"
+            :data="metrics.orders"
+          />
+        </n-card>
+      </n-grid-item>
+      <n-grid-item>
+        <n-card title="订单状态分布" :bordered="false" size="small">
+          <OrderStatusPie :height="'260px'" :data="metrics.statusBreakdown" />
+        </n-card>
+      </n-grid-item>
+    </n-grid>
   </div>
 </template>
 
 <script lang="ts" setup>
 import { ref, onMounted } from 'vue';
 import { CountTo } from '@/components/CountTo';
-import { getStatistics } from '@/api/dashboard/index';
+import { getStatistics, getMetrics } from '@/api/dashboard/index';
 import { useUserStore } from '@/store/modules/user';
+import FluxTrend from './components/FluxTrend.vue';
+import VisitAmount from './components/VisitAmount.vue';
+import OrderStatusPie from './components/OrderStatusPie.vue';
 
 const userStore = useUserStore();
 const loading = ref(true);
@@ -135,6 +164,19 @@ const statistics = ref<any>({
   revenue: 0,
   totalRevenue: 0,
 });
+
+const metrics = ref<any>({
+  dates: [],
+  visits: [],
+  orders: [],
+  revenue: [],
+  statusBreakdown: [],
+});
+
+const trendSeries = ref([
+  { name: '访问量', data: [] as number[] },
+  { name: '成交额', data: [] as number[] },
+]);
 
 const loadStatistics = async () => {
   try {
@@ -153,8 +195,40 @@ const loadStatistics = async () => {
   }
 };
 
+const loadMetrics = async () => {
+  try {
+    const params: any = { days: 30 };
+    if (userStore.isMerchant && userStore.getMerchantId) {
+      params.shopId = userStore.getMerchantId;
+    }
+    const data = await getMetrics(params);
+    metrics.value = data || metrics.value;
+    const dates = Array.isArray(metrics.value.dates) ? metrics.value.dates : [];
+    const visits = Array.isArray(metrics.value.visits) ? metrics.value.visits : [];
+    const orders = Array.isArray(metrics.value.orders) ? metrics.value.orders : [];
+    const revenue = Array.isArray(metrics.value.revenue) ? metrics.value.revenue : [];
+    const statusBreakdown = Array.isArray(metrics.value.statusBreakdown) ? metrics.value.statusBreakdown : [];
+
+    metrics.value = {
+      dates,
+      visits,
+      orders,
+      revenue,
+      statusBreakdown,
+    };
+
+    trendSeries.value = [
+      { name: '访问量', data: visits.map((v: any) => Number(v)) },
+      { name: '成交额', data: revenue.map((v: any) => Number(v)) },
+    ];
+  } catch (error) {
+    console.error('加载趋势数据失败:', error);
+  }
+};
+
 onMounted(() => {
   loadStatistics();
+  loadMetrics();
 });
 </script>
 

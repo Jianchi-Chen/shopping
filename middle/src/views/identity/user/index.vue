@@ -61,11 +61,12 @@
   import { h, ref, onMounted, reactive } from 'vue';
   import { NButton, NSpace, NTag } from 'naive-ui';
   import { getUserList, updateUserStatus } from '@/api/identity/user';
+  import { formatUserId } from '@/utils/idFormatter';
 
   const loading = ref(false);
   const dataList = ref<any[]>([]);
   const showStatusModal = ref(false);
-  const editUserId = ref<number | null>(null);
+  const editUserId = ref<string | null>(null);
   const editStatus = ref('');
 
   const queryParams = reactive({
@@ -107,7 +108,10 @@
     {
       title: '用户ID',
       key: 'id',
-      width: 80,
+      width: 120,
+      render(row: any) {
+        return formatUserId(row.id);
+      },
     },
     {
       title: '用户名',
@@ -133,16 +137,19 @@
       width: 130,
     },
     {
-      title: '角色',
-      key: 'role',
-      width: 100,
+      title: '头像',
+      key: 'avatar',
+      width: 80,
       render(row: any) {
-        const roleMap: Record<string, string> = {
-          USER: '用户',
-          MERCHANT: '商家',
-          ADMIN: '管理员',
-        };
-        return roleMap[row.role] || row.role;
+        if (row.avatar) {
+          return h('img', {
+            src: row.avatar,
+            alt: row.username,
+            style: { width: '32px', height: '32px', borderRadius: '50%', objectFit: 'cover' },
+          });
+        } else {
+          return h('span', {}, '👤');
+        }
       },
     },
     {
@@ -189,9 +196,17 @@
   const loadData = async () => {
     try {
       loading.value = true;
-      const data: any = await getUserList(queryParams);
+      // 过滤掉 null 和 undefined 参数
+      const params: any = Object.entries(queryParams).reduce((acc: any, [key, value]) => {
+        if (value !== null && value !== undefined && value !== '') {
+          acc[key] = value;
+        }
+        return acc;
+      }, {});
+      const data: any = await getUserList(params);
       dataList.value = data.list || [];
       pagination.page = data.page || 1;
+      pagination.pageSize = data.pageSize || queryParams.pageSize || 10;
       pagination.pageCount = data.pageCount || 1;
       pagination.itemCount = data.itemCount || 0;
     } catch (error) {

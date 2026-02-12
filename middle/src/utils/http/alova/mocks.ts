@@ -1,5 +1,7 @@
-// 这里按需导入 mock 文件，只有在这里导入并导出，才会执行 mock 拦截
-// 跟根据实际开发情况配置
+// Mock数据已禁用，不再导入mock文件
+// 如需启用mock，请在.env.development中设置 VITE_USE_MOCK = true
+// 并取消注释下方的导入和导出
+/*
 import UserMock from '../../../../mock/user';
 import MenusMock from '../../../../mock/user/menus';
 import ConsoleMock from '../../../../mock/dashboard/console';
@@ -10,16 +12,8 @@ import CommerceProductMock from '../../../../mock/commerce/products';
 import CommerceOrderMock from '../../../../mock/commerce/orders';
 import IdentityMerchantMock from '../../../../mock/identity/merchants';
 import IdentityUserMock from '../../../../mock/identity/users';
+*/
 
 export default [
-	UserMock,
-	MenusMock,
-	TableMock,
-	ConsoleMock,
-	SystemMenuMock,
-	SystemRoleMock,
-	CommerceProductMock,
-	CommerceOrderMock,
-	IdentityMerchantMock,
-	IdentityUserMock,
+	// 已禁用所有mock数据，现在使用真实后端API
 ];

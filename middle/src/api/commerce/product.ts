@@ -17,6 +17,20 @@ export function getProductDetail(id: number) {
 /**
  * 更新商品状态
  */
-export function updateProductStatus(data: { id: number; status: string }) {
-  return Alova.Post('/commerce/products/status', { data });
+export function updateProductStatus(data: { id: string; status: string }) {
+  return Alova.Post('/commerce/products/status', data);
+}
+
+/**
+ * 新增商品
+ */
+export function createProduct(data: any) {
+  return Alova.Post('/commerce/products', data);
+}
+
+/**
+ * 更新商品
+ */
+export function updateProduct(id: string, data: any) {
+  return Alova.Put(`/commerce/products/${id}`, data);
 }

@@ -83,34 +83,57 @@ export const useUserStore = defineStore({
       this.role = info.role || '';
       this.username = info.username || info.name || '';
       this.avatar = info.avatar || '';
+      // 根据角色生成权限列表
+      const permissionsList = this.generatePermissions(this.role);
+      this.setPermissions(permissionsList);
     },
     // 登录
     async login(params: any) {
-      const response = await login(params);
-      const { result, code } = response;
-      if (code === ResultEnum.SUCCESS) {
-        const ex = 7 * 24 * 60 * 60;
-        storage.set(ACCESS_TOKEN, result.token, ex);
-        storage.set(CURRENT_USER, result, ex);
-        storage.set(IS_SCREENLOCKED, false);
-        this.setToken(result.token);
-        this.setUserInfo(result);
+      try {
+        // Alova 拦截器已处理，直接返回 result（包含 token 和用户信息）
+        const result = await login(params);
+        
+        if (result && result.token) {
+          const ex = 7 * 24 * 60 * 60;
+          storage.set(ACCESS_TOKEN, result.token, ex);
+          storage.set(CURRENT_USER, result, ex);
+          storage.set(IS_SCREENLOCKED, false);
+          this.setToken(result.token);
+          this.setUserInfo(result);
+          
+          return { code: ResultEnum.SUCCESS, result };
+        }
+        
+        return { code: 500, message: '登录失败' };
+      } catch (error: any) {
+        console.error('登录异常:', error);
+        return { code: 500, message: error.message || '登录失败' };
       }
-      return response;
     },
 
     // 获取用户信息
     async getInfo() {
-      const data = await getUserInfoApi();
-      const { result } = data;
-      // 根据角色生成权限列表
-      const role = result.role || 'USER';
-      const permissionsList = this.generatePermissions(role);
-      this.setPermissions(permissionsList);
-      this.setUserInfo(result);
-      this.setAvatar(result.avatar || '');
-      storage.set(CURRENT_USER, result);
-      return result;
+      try {
+        // Alova 拦截器已处理，直接返回 result
+        const result = await getUserInfoApi();
+        
+        // 根据角色生成权限列表
+        const role = result.role || 'USER';
+        const permissionsList = this.generatePermissions(role);
+        this.setPermissions(permissionsList);
+        this.setUserInfo(result);
+        this.setAvatar(result.avatar || '');
+        storage.set(CURRENT_USER, result);
+        
+        // 返回完整的用户信息和权限，供路由守卫使用
+        return {
+          ...result,
+          permissions: permissionsList,
+        };
+      } catch (error) {
+        console.error('获取用户信息失败:', error);
+        throw error;
+      }
     },
 
     // 根据角色生成权限

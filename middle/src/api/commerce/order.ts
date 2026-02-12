@@ -10,8 +10,8 @@ export function getOrderList(params: any) {
 /**
  * 更新订单状态
  */
-export function updateOrderStatus(data: { id: number; status: string }) {
-  return Alova.Post('/commerce/orders/status', { data });
+export function updateOrderStatus(data: { id: string; status: string }) {
+  return Alova.Post('/commerce/orders/status', data);
 }
 
 /**

@@ -251,17 +251,16 @@
           />
 
           <!-- 我的订单标签 -->
-          <OrdersList
-            v-if="activeTab === 'orders'"
-            :orders="orders"
-            :loading="loading"
-            :order-status-filters="orderStatusFilters"
-            :active-filter="orderStatusFilter"
-            :get-order-status-text="getOrderStatusText"
-            :get-order-status-class="getOrderStatusClass"
-            @select-filter="orderStatusFilter = $event"
-            @view-detail="viewOrderDetail"
-          />
+          <div v-if="activeTab === 'orders'" class="bg-white rounded-lg shadow-sm p-6">
+            <h2 class="text-2xl font-bold text-gray-900 mb-3">我的订单</h2>
+            <p class="text-gray-600 mb-6">已统一到订单中心页面展示。</p>
+            <NuxtLink
+              to="/account/orders"
+              class="inline-flex items-center px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg font-medium transition-colors"
+            >
+              前往订单中心
+            </NuxtLink>
+          </div>
         </div>
       </div>
     </div>
@@ -674,6 +673,8 @@ const handleMenuClick = (item: any) => {
     userStore.logout()
     success('退出登录成功')
     router.push('/')
+  } else if (item.id === 'orders') {
+    router.push('/account/orders')
   } else {
     activeTab.value = item.id
   }

@@ -7,11 +7,13 @@ import io.cjc.backend.security.UserPrincipal;
 import io.cjc.backend.service.AuthService;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+@Slf4j
 @RestController
 @RequestMapping("/auth")
 @RequiredArgsConstructor
@@ -30,9 +32,30 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ApiResponse<TokenResponse> login(@RequestBody LoginRequest request) {
-        String token = authService.login(request.getUsername(), request.getPassword());
-        return ApiResponse.success(new TokenResponse(token));
+    public ApiResponse<LoginResponse> login(@RequestBody LoginRequest request) {
+        log.info("收到登录请求 - 用户名: {}, 密码长度: {}", request.getUsername(), 
+                 request.getPassword() != null ? request.getPassword().length() : 0);
+        try {
+            String token = authService.login(request.getUsername(), request.getPassword());
+            UserProfileDTO userInfo = authService.getCurrentUserProfile(request.getUsername());
+            log.info("登录成功，返回 token 和用户信息");
+            
+            LoginResponse response = new LoginResponse();
+            response.setToken(token);
+            response.setId(userInfo.getId());
+            response.setUsername(userInfo.getUsername());
+            response.setName(userInfo.getName());
+            response.setEmail(userInfo.getEmail());
+            response.setPhone(userInfo.getPhone());
+            response.setAvatar(userInfo.getAvatar());
+            response.setRole(userInfo.getRole());
+            response.setMerchantId(userInfo.getMerchantId());
+            
+            return ApiResponse.success(response);
+        } catch (Exception e) {
+            log.error("登录失败: {}", e.getMessage(), e);
+            return ApiResponse.error(401, e.getMessage());
+        }
     }
 
     @GetMapping("/me")
@@ -92,6 +115,19 @@ public class AuthController {
         public TokenResponse(String token) {
             this.token = token;
         }
+    }
+
+    @Data
+    public static class LoginResponse {
+        private String token;
+        private String id;
+        private String username;
+        private String name;
+        private String email;
+        private String phone;
+        private String avatar;
+        private String role;
+        private String merchantId;  // 商家ID（仅商家用户有值）
     }
 
     @Data

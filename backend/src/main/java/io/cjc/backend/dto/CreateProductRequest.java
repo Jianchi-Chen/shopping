@@ -6,10 +6,8 @@ import lombok.Data;
 import java.math.BigDecimal;
 
 @Data
-public class ProductDTO {
-    private String id;
+public class CreateProductRequest {
     private String title;
-    private String name;  // 为前端兼容，映射自title
     private String sku;
     private BigDecimal price;
     private BigDecimal originalPrice;
@@ -18,8 +16,7 @@ public class ProductDTO {
     private String category;
     private String shopId;
     private String shopName;
-    private String images;  // 图片列表
-    private BigDecimal rating;  // 平均评分
-    private Integer reviewCount;  // 评论数量
-    private String updatedAt;
+    private String description;
+    private String images;
+    private String specs;
 }

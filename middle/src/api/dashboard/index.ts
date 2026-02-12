@@ -8,6 +8,13 @@ export function getStatistics(params?: any) {
 }
 
 /**
+ * 获取趋势数据
+ */
+export function getMetrics(params?: any) {
+  return Alova.Get('/dashboard/metrics', { params });
+}
+
+/**
  * 获取待办列表
  */
 export function getTodoList(params?: any) {

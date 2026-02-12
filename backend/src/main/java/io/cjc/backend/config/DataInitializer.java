@@ -42,7 +42,11 @@ public class DataInitializer implements CommandLineRunner {
 
             if (userCount == 0) {
                 createAdminUserIfMissing();
+                createCjcAdminUserIfMissing();
                 createMerchantUserIfMissing();
+            } else {
+                // 确保 cjc 账户存在
+                createCjcAdminUserIfMissing();
             }
 
             if (merchantCount == 0) {
@@ -77,6 +81,7 @@ public class DataInitializer implements CommandLineRunner {
             System.out.println("==================================");
             System.out.println("测试数据初始化完成！");
             System.out.println("管理员账号: admin / admin123");
+            System.out.println("管理员账号: cjc / 123123");
             System.out.println("商家账号: merchant1 / merchant123");
             System.out.println("==================================");
             log.info("数据初始化/补充完成");
@@ -99,6 +104,21 @@ public class DataInitializer implements CommandLineRunner {
         admin.setRole(UserRole.ADMIN);
         userRepository.save(admin);
         log.info("管理员账号已就绪");
+    }
+
+    private void createCjcAdminUserIfMissing() {
+        User cjc = userRepository.findByUsername("cjc").orElse(null);
+        if (cjc == null) {
+            cjc = new User();
+            cjc.setUsername("cjc");
+            cjc.setRole(UserRole.ADMIN);
+        }
+        if (!passwordEncoder.matches("123123", cjc.getPassword() == null ? "" : cjc.getPassword())) {
+            cjc.setPassword(passwordEncoder.encode("123123"));
+        }
+        cjc.setRole(UserRole.ADMIN);
+        userRepository.save(cjc);
+        log.info("CJC 管理员账号已就绪");
     }
 
     private void createMerchantUserIfMissing() {

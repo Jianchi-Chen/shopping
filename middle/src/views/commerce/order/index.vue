@@ -62,12 +62,13 @@
   import { NButton, NSpace, NTag } from 'naive-ui';
   import { getOrderList, updateOrderStatus } from '@/api/commerce/order';
   import { useUserStore } from '@/store/modules/user';
+  import { formatOrderId } from '@/utils/idFormatter';
 
   const userStore = useUserStore();
   const loading = ref(false);
   const dataList = ref<any[]>([]);
   const showStatusModal = ref(false);
-  const editOrderId = ref<number | null>(null);
+  const editOrderId = ref<string | null>(null);
   const editStatus = ref('');
 
   const queryParams = reactive({
@@ -117,7 +118,10 @@
     {
       title: '订单ID',
       key: 'id',
-      width: 80,
+      width: 150,
+      render(row: any) {
+        return formatOrderId(row.id, row.createdAt);
+      },
     },
     {
       title: '订单号',
@@ -181,16 +185,23 @@
   const loadData = async () => {
     try {
       loading.value = true;
-      const params: any = { ...queryParams };
+      // 过滤掉 null 和 undefined 参数
+      const params: any = Object.entries(queryParams).reduce((acc: any, [key, value]) => {
+        if (value !== null && value !== undefined && value !== '') {
+          acc[key] = value;
+        }
+        return acc;
+      }, {});
       // 商家只能查看自己的订单
       if (userStore.isMerchant && userStore.getMerchantId) {
         params.shopId = userStore.getMerchantId;
       }
       const data: any = await getOrderList(params);
-      dataList.value = data.list || [];
-      pagination.page = data.page || 1;
-      pagination.pageCount = data.pageCount || 1;
-      pagination.itemCount = data.itemCount || 0;
+      dataList.value = Array.isArray(data?.list) ? data.list : [];
+      pagination.page = data?.page || 1;
+      pagination.pageSize = data?.pageSize || queryParams.pageSize || 10;
+      pagination.pageCount = data?.pageCount || 1;
+      pagination.itemCount = data?.itemCount || 0;
     } catch (error) {
       console.error('加载订单列表失败:', error);
       const message: any = (window as any).$message;
@@ -219,14 +230,23 @@
   const handleUpdateStatus = async () => {
     if (!editOrderId.value) return;
     try {
-      await updateOrderStatus({
+      const response: any = await updateOrderStatus({
         id: editOrderId.value,
         status: editStatus.value,
       });
       const message: any = (window as any).$message;
       message?.success('状态更新成功');
       showStatusModal.value = false;
-      loadData();
+      // 直接更新列表中的项目，然后重新加载以保持同步
+      const index = dataList.value.findIndex((item: any) => item.id === editOrderId.value);
+      if (index !== -1 && response) {
+        dataList.value[index].status = response.status || editStatus.value;
+      }
+      dataList.value = [...dataList.value];
+      // 延迟后重新加载以确保同步
+      setTimeout(() => {
+        loadData();
+      }, 500);
     } catch (error) {
       console.error('更新状态失败:', error);
       const message: any = (window as any).$message;

@@ -10,6 +10,6 @@ export function getMerchantList(params: any) {
 /**
  * 更新商家状态
  */
-export function updateMerchantStatus(data: { id: number; status: string }) {
-  return Alova.Post('/identity/merchants/status', { data });
+export function updateMerchantStatus(data: { id: string; status: string }) {
+  return Alova.Post('/identity/merchants/status', data);
 }

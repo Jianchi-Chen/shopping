@@ -12,6 +12,9 @@ export interface BackendProduct {
   category: string
   shopId: string
   shopName: string
+  images?: string  // 图片链接（逗号分隔）
+  rating?: number  // 平均评分
+  reviewCount?: number  // 评论数量
   updatedAt: string
 }
 

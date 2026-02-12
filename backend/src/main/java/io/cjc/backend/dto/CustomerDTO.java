@@ -9,7 +9,10 @@ import java.math.BigDecimal;
 public class CustomerDTO {
     private String id;
     private String name;
+    private String username;  // 从关联的User获取
+    private String email;
     private String phone;
+    private String avatar;  // 用户头像
     private CustomerStatus status;
     private Integer orderCount;
     private BigDecimal totalSpent;

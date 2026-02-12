@@ -13,6 +13,7 @@ public class UserProfileDTO {
     private String phone;
     private String avatar;
     private String role;
+    private String merchantId;  // 商家ID（仅商家用户有值）
     private String createdAt;
     private String updatedAt;
 
